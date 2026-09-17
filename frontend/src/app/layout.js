@@ -34,10 +34,11 @@ export async function generateMetadata() {
     
     if (res.ok) {
       const data = await res.json();
+      const logoVersion = data?.logo ? `?v=${encodeURIComponent(data.logo.slice(-12))}` : "";
       defaultMetadata.icons = {
-        icon: `${apiUrl}/settings/logo`,
-        shortcut: `${apiUrl}/settings/logo`,
-        apple: `${apiUrl}/settings/logo`,
+        icon: `${apiUrl}/settings/logo${logoVersion}`,
+        shortcut: `${apiUrl}/settings/logo${logoVersion}`,
+        apple: `${apiUrl}/settings/logo${logoVersion}`,
       };
       if (data?.siteName) {
         defaultMetadata.title = {

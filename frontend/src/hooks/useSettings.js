@@ -16,14 +16,21 @@ const useSettings = () => {
 
   useEffect(() => {
     if (logo && typeof document !== "undefined") {
-      let link = document.querySelector("link[rel*='icon']");
-      if (!link) {
-        link = document.createElement("link");
+      const apiUrl = getApiUrl();
+      const logoVersion = logo ? `?v=${encodeURIComponent(logo.slice(-12))}` : "";
+      const logoUrl = `${apiUrl}/settings/logo${logoVersion}`;
+
+      const iconLinks = document.querySelectorAll("link[rel*='icon']");
+      if (iconLinks.length > 0) {
+        iconLinks.forEach((link) => {
+          link.href = logoUrl;
+        });
+      } else {
+        const link = document.createElement("link");
         link.rel = "shortcut icon";
+        link.href = logoUrl;
         document.head.appendChild(link);
       }
-      const apiUrl = getApiUrl();
-      link.href = `${apiUrl}/settings/logo`;
     }
   }, [logo]);
 
