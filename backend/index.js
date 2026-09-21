@@ -23,6 +23,7 @@ const port = process.env.PORT || 5000;
 const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, "") : "";
 const allowedOrigins = [
     clientUrl,
+    "https://oneclickbd.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",
 ].filter(Boolean);
@@ -32,7 +33,11 @@ app.use(
         origin: function (origin, callback) {
             if (!origin) return callback(null, true);
             const cleanOrigin = origin.replace(/\/$/, "");
-            if (allowedOrigins.includes(cleanOrigin) || process.env.NODE_ENV !== "production") {
+            if (
+                allowedOrigins.includes(cleanOrigin) ||
+                cleanOrigin.endsWith(".vercel.app") ||
+                process.env.NODE_ENV !== "production"
+            ) {
                 return callback(null, true);
             }
             return callback(new Error("Not allowed by CORS"));

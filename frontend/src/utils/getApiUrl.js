@@ -9,12 +9,19 @@
 
 
 export function getApiUrl() {
-  let url =
-    typeof window === "undefined"
-      ? process.env.INTERNAL_API_URL
-      : process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    return "http://localhost:5000/api";
+  }
 
-  url = (url || "http://localhost:5000/api").trim().replace(/\/+$/, "");
+  let url = process.env.NEXT_PUBLIC_API_URL || process.env.INTERNAL_API_URL;
+
+  if (!url) {
+    url = typeof window !== "undefined" || process.env.NODE_ENV === "production"
+      ? "https://oneclick-server-lemon.vercel.app/api"
+      : "http://localhost:5000/api";
+  }
+
+  url = url.trim().replace(/\/+$/, "");
 
   if (!url.endsWith("/api")) {
     url += "/api";
