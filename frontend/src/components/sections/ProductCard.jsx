@@ -14,7 +14,6 @@ function StockBar({ stock, maxStock }) {
   if (stock === 0) return null;
   const ref = maxStock || 100;
   const percentage = Math.min((stock / ref) * 100, 100);
-  const isLow = percentage <= 25;
 
   return (
     <div className="space-y-1">
@@ -28,9 +27,7 @@ function StockBar({ stock, maxStock }) {
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            isLow ? "bg-destructive" : "bg-primary"
-          }`}
+          className="h-full rounded-full transition-all duration-500 bg-secondary"
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -89,25 +86,24 @@ export default function ProductCard({ product, index, badge }) {
       >
         <Link href={`/product/${product._id}`} className="group block h-full">
           <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${badgeConfig[effectiveBadge]?.ring ?? ""}`}>
-            <div className="relative aspect-square overflow-hidden bg-muted">
+            {/* Section 1: Fixed Consistent Image Section */}
+            <div className="relative aspect-square h-44 sm:h-48 w-full shrink-0 overflow-hidden bg-muted/30 flex items-center justify-center border-b border-border/40">
               <img
                 src={product.thumbnail || product.images?.[0] || undefined}
                 alt={product.title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
 
               {hasDiscount && (
-                <div className="absolute left-3 top-3 z-10">
-                  <Badge variant="destructive" className="text-[11px] font-semibold">
-                    -{Math.round(product.discountPercentage)}%
-                  </Badge>
+                <div className="absolute left-0 top-3 z-10 rounded-r bg-secondary px-2 py-0.5 text-[10px] font-bold text-secondary-foreground shadow-sm">
+                  -{Math.round(product.discountPercentage)}%
                 </div>
               )}
 
               {effectiveBadge && badgeConfig[effectiveBadge] && (
-                <div className={`absolute top-3 z-20 ${hasDiscount ? "left-13" : "left-3"}`}>
-                  <Badge className={`gap-1 text-[11px] font-semibold ${badgeConfig[effectiveBadge].className}`}>
+                <div className={`absolute top-3 z-20 ${hasDiscount ? "left-14" : "left-2.5"}`}>
+                  <Badge className={`gap-1 text-[10px] font-semibold px-2 py-0.5 ${badgeConfig[effectiveBadge].className}`}>
                     {(() => { const Icon = badgeConfig[effectiveBadge].icon; return <Icon className="size-3" />; })()}
                     {badgeConfig[effectiveBadge].label}
                   </Badge>
@@ -115,8 +111,8 @@ export default function ProductCard({ product, index, badge }) {
               )}
 
               {product.stock <= 5 && product.stock > 0 && (
-                <div className="absolute right-3 top-3 z-10">
-                  <Badge variant="secondary" className="text-[11px] font-semibold">
+                <div className="absolute right-2.5 top-2.5 z-10">
+                  <Badge variant="secondary" className="text-[10px] font-semibold px-2 py-0.5">
                     Only {product.stock} left
                   </Badge>
                 </div>
@@ -131,40 +127,45 @@ export default function ProductCard({ product, index, badge }) {
               )}
             </div>
 
-            <div className="flex flex-1 flex-col gap-2 p-4">
-              {product.brand && (
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  {product.brand}
-                </p>
-              )}
-
-              <h3 className="line-clamp-2 text-sm font-semibold text-foreground sm:text-base">
-                {product.title}
-              </h3>
-
-              <div className="mt-auto flex items-baseline gap-2">
-                <span className="text-lg font-bold text-foreground">
-                  {formatBDT(hasDiscount ? discountedPrice : product.price)}
-                </span>
-                {hasDiscount && (
-                  <span className="text-sm text-muted-foreground line-through">
-                    {formatBDT(product.price)}
-                  </span>
+            {/* Section 2: Compact Product Information Section */}
+            <div className="flex flex-1 flex-col justify-between p-3">
+              <div className="space-y-1">
+                {product.brand && (
+                  <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground line-clamp-1">
+                    {product.brand}
+                  </p>
                 )}
+
+                <h3 className="line-clamp-2 text-xs font-semibold text-foreground sm:text-sm leading-snug">
+                  {product.title}
+                </h3>
               </div>
 
-              <StockBar stock={product.stock} maxStock={100} />
+              <div className="mt-2 space-y-1.5">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-sm sm:text-base font-bold text-foreground">
+                    {formatBDT(hasDiscount ? discountedPrice : product.price)}
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-[11px] sm:text-xs text-muted-foreground line-through">
+                      {formatBDT(product.price)}
+                    </span>
+                  )}
+                </div>
+
+                <StockBar stock={product.stock} maxStock={100} />
+              </div>
             </div>
 
             {!isAdmin && (
-              <div className="p-4 pt-0">
+              <div className="p-3 pt-0">
                 <button
                   disabled={isOutOfStock}
                   onClick={(e) => {
                     e.preventDefault();
                     setShowModal(true);
                   }}
-                  className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm"
+                  className="w-full rounded-lg bg-primary py-2 text-xs sm:text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm"
                 >
                   {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
                 </button>

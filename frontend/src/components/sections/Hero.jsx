@@ -66,7 +66,7 @@ export default function Hero({ initialData }) {
             nextEl: ".hero-next",
           }}
           loop={banners.length > 1}
-          className="hero-swiper w-full h-auto aspect-[2.3/1] sm:aspect-[2.8/1] md:aspect-[3/1] lg:h-86"
+          className="hero-swiper w-full h-auto aspect-[2.3/1] sm:aspect-[2.8/1] md:aspect-[3.2/1] overflow-hidden shadow-sm"
         >
           {banners.map((banner) => (
             <SwiperSlide key={banner._id}>

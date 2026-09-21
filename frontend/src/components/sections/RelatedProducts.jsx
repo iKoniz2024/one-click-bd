@@ -81,8 +81,8 @@ function CompactProductCard({ product, index }) {
         }}
       >
         <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-          {/* Image & Price Container */}
-          <Link href={`/product/${product._id}`} className="relative block aspect-square w-full overflow-hidden bg-muted">
+          {/* Section 1: Fixed Consistent Image Section */}
+          <Link href={`/product/${product._id}`} className="relative block aspect-square h-40 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 border-b border-border/40 flex items-center justify-center">
             {/* Badges */}
             {activeBadgeInfo && (
               <div className="absolute left-2 top-2 z-10">
@@ -97,17 +97,15 @@ function CompactProductCard({ product, index }) {
             )}
 
             {hasDiscount && (
-              <div className="absolute right-2 top-2 z-10">
-                <Badge variant="destructive" className="text-[10px] font-semibold px-1.5 py-0.5 shadow-md">
-                  -{Math.round(product.discountPercentage)}%
-                </Badge>
+              <div className="absolute left-0 top-3 z-10 rounded-r bg-secondary px-2 py-0.5 text-[10px] font-bold text-secondary-foreground shadow-sm">
+                -{Math.round(product.discountPercentage)}%
               </div>
             )}
 
             <img
               src={product.thumbnail || product.images?.[0] || undefined}
               alt={product.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
 

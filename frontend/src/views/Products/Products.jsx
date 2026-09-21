@@ -80,39 +80,11 @@ export default function Products({ initialCategories, initialProducts }) {
     setPage(1);
   }, [selectedCategory, searchQuery, sort]);
 
-  const activeCategorySlugs = useMemo(() => {
-    if (!selectedCategory || !categories.length) return "";
-    const match = categories.find(
-      (p) =>
-        p.slug === selectedCategory ||
-        p.children?.some(
-          (c) =>
-            c.slug === selectedCategory ||
-            c.categories?.includes(selectedCategory)
-        )
-    );
-    if (!match) return selectedCategory;
-    const childSlugs = [];
-    if (match.slug === selectedCategory) {
-      for (const c of match.children ?? []) {
-        childSlugs.push(...(c.categories ?? []));
-      }
-    } else {
-      const child = match.children?.find(
-        (c) =>
-          c.slug === selectedCategory ||
-          c.categories?.includes(selectedCategory)
-      );
-      if (child) childSlugs.push(...(child.categories ?? []));
-    }
-    return childSlugs.length > 0 ? childSlugs.join(",") : selectedCategory;
-  }, [selectedCategory, categories]);
-
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["products", { search: searchQuery, category: activeCategorySlugs, sort, page, limit }],
-    queryFn: () => getProducts({ search: searchQuery, category: activeCategorySlugs, sort, page, limit }),
+    queryKey: ["products", { search: searchQuery, category: selectedCategory, sort, page, limit }],
+    queryFn: () => getProducts({ search: searchQuery, category: selectedCategory, sort, page, limit }),
     placeholderData: keepPreviousData,
-    initialData: (!searchQuery && !activeCategorySlugs && sort === "newest" && page === 1 && initialProducts?.products?.length > 0) ? initialProducts : undefined,
+    initialData: (!searchQuery && !selectedCategory && sort === "newest" && page === 1 && initialProducts?.products?.length > 0) ? initialProducts : undefined,
   });
 
   const filteredProducts = data?.products ?? [];
@@ -396,7 +368,7 @@ export default function Products({ initialCategories, initialProducts }) {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-2 gap-3.5 sm:gap-5 sm:grid-cols-3 lg:grid-cols-4">
                   {filteredProducts.map((product, i) => (
                     <ProductCard key={product._id} product={product} index={i} />
                   ))}

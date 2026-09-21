@@ -189,16 +189,16 @@ export default function ProductDetails({ children }) {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left - Images lg:w-[35%] */}
           <div className="flex flex-col gap-3 lg:w-[35%]">
-            <div className="relative overflow-hidden border border-border bg-muted">
+            <div className="relative overflow-hidden rounded-xl border border-border bg-muted/30 flex items-center justify-center">
               <img
                 src={mainDisplayImage}
                 alt={product.title}
-                className="aspect-4/5 w-full object-cover"
+                className="aspect-square max-h-[380px] sm:max-h-[440px] lg:max-h-[460px] w-full object-contain p-2"
                 loading="lazy"
               />
               {hasDiscount && (
-                <div className="absolute left-3 top-3">
-                  <Badge className="bg-primary text-primary-foreground text-xs font-semibold">
+                <div className="absolute left-3 top-3 z-10">
+                  <Badge className="bg-secondary text-secondary-foreground text-xs font-semibold shadow-sm">
                     -{Math.round(product.discountPercentage)}%
                   </Badge>
                 </div>
@@ -214,15 +214,15 @@ export default function ProductDetails({ children }) {
                       setSelectedImage(i);
                       setActiveDisplayImage(img);
                     }}
-                    className={`size-16 shrink-0 overflow-hidden rounded border transition-colors sm:size-20 ${img === mainDisplayImage
-                      ? "border-foreground"
+                    className={`size-16 shrink-0 overflow-hidden rounded-lg border transition-colors bg-muted/20 sm:size-20 ${img === mainDisplayImage
+                      ? "border-foreground ring-1 ring-foreground"
                       : "border-border hover:border-muted-foreground/50"
                       }`}
                   >
                     <img
                       src={img}
                       alt={`${product.title} ${i + 1}`}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-contain p-1"
                       loading="lazy"
                     />
                   </button>

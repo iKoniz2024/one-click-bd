@@ -359,15 +359,17 @@ export default function AdminCategories({ children }) {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">Category Image</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">
+                    Category Image <span className="text-xs text-muted-foreground font-normal">(Recommended: 1:1 Square / 400x400px)</span>
+                  </label>
                   <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-border p-4 transition-colors hover:border-primary/50 hover:bg-muted/50">
                     {createImage ? (
                       <img src={createImage} alt="Preview" className="h-20 w-20 rounded-full object-cover" />
                     ) : (
-                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground text-center">
                         <Upload className="size-8" />
                         <p className="text-sm">Click to upload image</p>
-                        <p className="text-xs">PNG, JPG up to 2MB</p>
+                        <p className="text-xs">PNG, JPG up to 2MB • <strong>1:1 Square Ratio</strong></p>
                       </div>
                     )}
                     <input type="file" accept="image/*" className="hidden" onChange={handleCreateImageUpload} />

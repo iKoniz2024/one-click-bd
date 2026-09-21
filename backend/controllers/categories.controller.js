@@ -52,7 +52,13 @@ const getCategoriesWithCounts = async (req, res) => {
 
             return categories.map(parent => {
                 let totalCount = 0;
+                if (parent.slug) totalCount += countMap.get(parent.slug) ?? 0;
+                if (parent.name) totalCount += countMap.get(parent.name) ?? 0;
+                if (parent._id) totalCount += countMap.get(parent._id.toString()) ?? 0;
+
                 for (const child of parent.children ?? []) {
+                    if (child.slug) totalCount += countMap.get(child.slug) ?? 0;
+                    if (child.name) totalCount += countMap.get(child.name) ?? 0;
                     for (const catSlug of child.categories ?? []) {
                         totalCount += countMap.get(catSlug) ?? 0;
                     }

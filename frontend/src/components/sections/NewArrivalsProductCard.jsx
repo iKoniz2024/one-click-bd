@@ -35,17 +35,18 @@ export default function NewArrivalsProductCard({ product, index }) {
         }}
         className="shrink-0 w-37.5 sm:w-45"
       >
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <div className="flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-card">
           <Link href={`/product/${product._id}`} className="block">
-            <div className="relative aspect-3/4 overflow-hidden bg-muted">
+            {/* Section 1: Fixed Consistent Image Section */}
+            <div className="relative aspect-square h-40 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 flex items-center justify-center border-b border-border/40">
               <img
                 src={product.thumbnail || product.images?.[0] || null}
                 alt={product.title}
-                className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                className="h-full w-full object-contain p-2 transition-transform duration-300 hover:scale-105"
                 loading="lazy"
               />
               {hasDiscount && (
-                <div className="absolute left-0 top-4 z-10 rounded-r bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground">
+                <div className="absolute left-0 top-3 z-10 rounded-r bg-secondary px-2 py-0.5 text-[10px] font-bold text-secondary-foreground shadow-sm">
                   -{Math.round(product.discountPercentage)}%
                 </div>
               )}
@@ -59,9 +60,12 @@ export default function NewArrivalsProductCard({ product, index }) {
             </div>
           </Link>
 
-          <div className="p-2">
-            <div className="flex items-baseline gap-1">
-              <span className="text-sm font-bold text-foreground">
+          <div className="flex flex-1 flex-col justify-between p-2.5">
+            <h4 className="line-clamp-1 text-xs font-medium text-foreground">
+              {product.title}
+            </h4>
+            <div className="mt-1 flex items-baseline gap-1">
+              <span className="text-xs sm:text-sm font-bold text-foreground">
                 {formatBDT(hasDiscount ? discountedPrice : product.price)}
               </span>
               {hasDiscount && (
@@ -73,7 +77,7 @@ export default function NewArrivalsProductCard({ product, index }) {
           </div>
 
           {!isAdmin && (
-            <div className="px-2 pb-2">
+            <div className="p-2 pt-0">
               <button
                 disabled={isOutOfStock}
                 onClick={() => setShowModal(true)}

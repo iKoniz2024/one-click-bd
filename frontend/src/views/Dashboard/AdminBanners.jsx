@@ -257,7 +257,9 @@ export default function AdminBanners({ children }) {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-foreground">Image *</label>
+                  <label className="mb-1 block text-sm font-medium text-foreground">
+                    Banner Image * <span className="text-xs text-muted-foreground font-normal">(Recommended Ratio: 3:1 Banner / 1200x400px)</span>
+                  </label>
                   <input
                     ref={createFileRef}
                     type="file"
@@ -271,7 +273,7 @@ export default function AdminBanners({ children }) {
                     className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-6 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/50"
                   >
                     <Upload className="size-5" />
-                    Click to upload image
+                    Click to upload banner image (Recommended 3:1 Ratio)
                   </button>
                   {createPreview && (
                     <div className="mt-3 relative inline-block">

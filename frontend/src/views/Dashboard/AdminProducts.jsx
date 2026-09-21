@@ -904,7 +904,9 @@ export default function AdminProducts({ children }) {
                   <div className="grid gap-6 sm:grid-cols-2">
                     {/* Thumbnail Image */}
                     <div>
-                      <label className="mb-2 block text-xs font-semibold text-foreground">Main Thumbnail Image *</label>
+                      <label className="mb-2 block text-xs font-semibold text-foreground">
+                        Main Thumbnail Image * <span className="font-normal text-muted-foreground">(Recommended: 1:1 Square / 800x800px)</span>
+                      </label>
                       <input
                         ref={thumbnailInputRef}
                         type="file"
@@ -948,7 +950,7 @@ export default function AdminProducts({ children }) {
                             </div>
                             <div>
                               <p className="text-xs font-semibold text-foreground">Upload Cover Image</p>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">PNG, JPG up to 5MB</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">PNG, JPG up to 5MB • <strong>Aspect Ratio 1:1 (Square)</strong></p>
                             </div>
                           </div>
                         )}
@@ -957,7 +959,9 @@ export default function AdminProducts({ children }) {
 
                     {/* Gallery Images */}
                     <div>
-                      <label className="mb-2 block text-xs font-semibold text-foreground">Gallery Images (Multiple)</label>
+                      <label className="mb-2 block text-xs font-semibold text-foreground">
+                        Gallery Images (Multiple) <span className="font-normal text-muted-foreground">(Recommended: 1:1 Square / 800x800px)</span>
+                      </label>
                       <input
                         ref={imagesInputRef}
                         type="file"

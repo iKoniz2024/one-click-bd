@@ -182,6 +182,65 @@ const getBestSellingIds = async (db) => {
     });
 };
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Helper function to dynamically resolve category hierarchy identifiers
+const getCategoryIdentifiers = async (db, categoryInput) => {
+    if (!categoryInput || !categoryInput.trim()) return [];
+
+    const categoriesCollection = db.collection("categories");
+    const allCategories = await categoriesCollection.find({}).toArray();
+
+    const inputs = categoryInput.split(",").map(c => c.trim()).filter(Boolean);
+    const matchedStrings = new Set();
+
+    for (const input of inputs) {
+        matchedStrings.add(input);
+        const lowerInput = input.toLowerCase();
+
+        for (const parent of allCategories) {
+            const isParentMatch =
+                parent.slug?.toLowerCase() === lowerInput ||
+                parent.name?.toLowerCase() === lowerInput ||
+                (parent._id && parent._id.toString() === input);
+
+            if (isParentMatch) {
+                // Selected category is a PARENT: Include parent and ALL of its child subcategories
+                if (parent.slug) matchedStrings.add(parent.slug);
+                if (parent.name) matchedStrings.add(parent.name);
+                if (parent._id) matchedStrings.add(parent._id.toString());
+
+                for (const child of parent.children ?? []) {
+                    if (child.slug) matchedStrings.add(child.slug);
+                    if (child.name) matchedStrings.add(child.name);
+                    for (const cat of child.categories ?? []) {
+                        if (cat) matchedStrings.add(cat);
+                    }
+                }
+            } else {
+                // Check if input matches a CHILD subcategory specifically
+                for (const child of parent.children ?? []) {
+                    const isChildMatch =
+                        child.slug?.toLowerCase() === lowerInput ||
+                        child.name?.toLowerCase() === lowerInput ||
+                        (child.categories ?? []).some(c => c?.toLowerCase() === lowerInput);
+
+                    if (isChildMatch) {
+                        // Selected category is a CHILD: Include ONLY this specific child category & its sub-categories
+                        if (child.slug) matchedStrings.add(child.slug);
+                        if (child.name) matchedStrings.add(child.name);
+                        for (const cat of child.categories ?? []) {
+                            if (cat) matchedStrings.add(cat);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return Array.from(matchedStrings);
+};
+
 const getAllProducts = async (req, res) => {
 
     try {
@@ -196,29 +255,61 @@ const getAllProducts = async (req, res) => {
         const brand = req.query.brand || "";
         const sort = req.query.sort || "";
 
-        const query = {};
+        const queryConditions = [];
 
-        if (search && search.trim()) {
-            const cleanSearch = search.trim();
-            query.$or = [
-                { title: { $regex: cleanSearch, $options: "i" } },
-                { brand: { $regex: cleanSearch, $options: "i" } },
-                { tags: { $regex: cleanSearch, $options: "i" } }
-            ];
-        }
+        // 1. Resolve Category Filtering (Parent vs Child category hierarchy)
+        if (category && category.trim()) {
+            const categoryIdentifiers = await getCategoryIdentifiers(db, category.trim());
 
-        if (category) {
-            const categoriesArray = category.split(",");
-            if (categoriesArray.length > 1) {
-                query.category = { $in: categoriesArray };
-            } else {
-                query.category = category;
+            if (categoryIdentifiers.length > 0) {
+                const catRegexes = categoryIdentifiers.map(str => new RegExp(`^${escapeRegex(str)}$`, 'i'));
+                const catObjectIds = categoryIdentifiers
+                    .filter(str => ObjectId.isValid(str))
+                    .map(str => new ObjectId(str));
+
+                const catOrList = [
+                    { category: { $in: catRegexes } },
+                    ...(catObjectIds.length > 0 ? [{ category: { $in: catObjectIds } }] : [])
+                ];
+
+                queryConditions.push({ $or: catOrList });
             }
         }
 
-        if (brand) {
-            query.brand = brand;
+        // 2. Resolve Search Query Filtering
+        if (search && search.trim()) {
+            const cleanSearch = search.trim();
+            const searchRegex = new RegExp(escapeRegex(cleanSearch), "i");
+
+            // Also check if search query matches any category hierarchy
+            const categorySearchIdentifiers = await getCategoryIdentifiers(db, cleanSearch);
+            const searchCatRegexes = categorySearchIdentifiers.map(str => new RegExp(`^${escapeRegex(str)}$`, 'i'));
+
+            const searchOrConditions = [
+                { title: searchRegex },
+                { description: searchRegex },
+                { brand: searchRegex },
+                { tags: searchRegex },
+                { category: searchRegex },
+                { sku: searchRegex }
+            ];
+
+            if (searchCatRegexes.length > 0) {
+                searchOrConditions.push({ category: { $in: searchCatRegexes } });
+            }
+
+            queryConditions.push({ $or: searchOrConditions });
         }
+
+        // 3. Resolve Brand Filtering
+        if (brand && brand.trim()) {
+            queryConditions.push({ brand: brand.trim() });
+        }
+
+        // Combine all conditions using $and so search + category + brand work seamlessly together
+        const query = queryConditions.length > 0
+            ? (queryConditions.length === 1 ? queryConditions[0] : { $and: queryConditions })
+            : {};
 
         let sortOption = { _id: -1 };
 
@@ -228,7 +319,7 @@ const getAllProducts = async (req, res) => {
             sortOption = { price: -1 };
         }
 
-        const cacheKey = `products_${page}_${limit}_${search}_${category}_${brand}_${sort}`;
+        const cacheKey = `products_${page}_${limit}_${encodeURIComponent(search)}_${encodeURIComponent(category)}_${encodeURIComponent(brand)}_${sort}`;
         const result = await withCache(cacheKey, 15, async () => {
             const bestSellingIds = await getBestSellingIds(db);
             const bestSellingIdsSet = new Set(bestSellingIds);
