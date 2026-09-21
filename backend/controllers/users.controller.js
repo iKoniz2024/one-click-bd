@@ -71,10 +71,16 @@ const updateProfile = async (req, res) => {
         const db = getDB();
         const usersCollection = db.collection("users");
 
+        const { name, phone, address, profilePhoto } = req.body || {};
+
         const updateData = {
-            ...req.body,
             updatedAt: new Date()
         };
+
+        if (name !== undefined) updateData.name = String(name).trim();
+        if (phone !== undefined) updateData.phone = String(phone).trim();
+        if (address !== undefined) updateData.address = String(address).trim();
+        if (profilePhoto !== undefined) updateData.profilePhoto = String(profilePhoto).trim();
 
         const result = await usersCollection.updateOne(
             {

@@ -73,23 +73,30 @@ export default function ProductDetails({ children }) {
 
   usePageTitle(product?.title || "Product Details");
 
-  // Sync color & display image when product loads
-  const [prevProductId, setPrevProductId] = useState(null);
-  if (product && product._id !== prevProductId) {
-    setPrevProductId(product._id);
-    if (product.colors?.length > 0) {
-      setSelectedColor(product.colors[0]);
-      if (product.colors[0].image) {
-        setActiveDisplayImage(product.colors[0].image);
-      }
-    } else {
-      setSelectedColor(null);
-      setActiveDisplayImage(null);
-    }
-  }
+  const [currentUrl, setCurrentUrl] = useState("");
 
   useEffect(() => {
-    if (id) {
+    if (typeof window !== "undefined") {
+      setCurrentUrl(window.location.href);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (product) {
+      if (product.colors?.length > 0) {
+        setSelectedColor(product.colors[0]);
+        if (product.colors[0].image) {
+          setActiveDisplayImage(product.colors[0].image);
+        }
+      } else {
+        setSelectedColor(null);
+        setActiveDisplayImage(null);
+      }
+    }
+  }, [product?._id]);
+
+  useEffect(() => {
+    if (id && typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
     if (product && product._id) {
@@ -187,10 +194,11 @@ export default function ProductDetails({ children }) {
                 src={mainDisplayImage}
                 alt={product.title}
                 className="aspect-4/5 w-full object-cover"
+                loading="lazy"
               />
               {hasDiscount && (
                 <div className="absolute left-3 top-3">
-                  <Badge className="bg-foreground text-background text-xs font-semibold">
+                  <Badge className="bg-primary text-primary-foreground text-xs font-semibold">
                     -{Math.round(product.discountPercentage)}%
                   </Badge>
                 </div>
@@ -215,6 +223,7 @@ export default function ProductDetails({ children }) {
                       src={img}
                       alt={`${product.title} ${i + 1}`}
                       className="h-full w-full object-cover"
+                      loading="lazy"
                     />
                   </button>
                 ))}
@@ -269,8 +278,8 @@ export default function ProductDetails({ children }) {
                           }
                         }}
                         className={`group relative flex items-center gap-2 rounded-lg border-2 p-1.5 transition-all ${isSelected
-                            ? "border-foreground bg-muted/40 ring-1 ring-foreground"
-                            : "border-border hover:border-foreground/50 bg-background"
+                            ? "border-primary bg-primary/10 ring-1 ring-primary"
+                            : "border-border hover:border-primary/50 bg-background"
                           }`}
                       >
                         <div className="size-10 overflow-hidden rounded border border-border bg-muted shrink-0">
@@ -278,6 +287,7 @@ export default function ProductDetails({ children }) {
                             src={colorObj.image || product.thumbnail}
                             alt={colorObj.name}
                             className="h-full w-full object-cover"
+                            loading="lazy"
                           />
                         </div>
                         <span className="pr-2 text-xs font-semibold text-foreground">
@@ -306,9 +316,9 @@ export default function ProductDetails({ children }) {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`min-w-10 border px-3 py-1.5 text-sm font-medium transition-colors ${selectedSize === size
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border bg-background text-foreground hover:border-foreground/50"
+                      className={`min-w-10 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${selectedSize === size
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-foreground hover:border-primary/50"
                         }`}
                     >
                       {size}
@@ -368,7 +378,7 @@ export default function ProductDetails({ children }) {
             {/* Social Share */}
             <div className="flex items-center gap-2 pt-2 justify-center">
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`}
+                href={currentUrl ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}` : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
@@ -376,7 +386,7 @@ export default function ProductDetails({ children }) {
                 <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
               </a>
               <a
-                href={`https://twitter.com/intent/tweet?text=${product.title}&url=${window.location.href}`}
+                href={currentUrl ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(product.title)}&url=${encodeURIComponent(currentUrl)}` : "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"

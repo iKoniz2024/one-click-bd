@@ -56,18 +56,18 @@ if (process.env.VERCEL) {
     });
 }
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/settings", settingsRoutes);
-app.use("/api/banners", bannerRoutes);
-
-app.get("/", (req, res) => {
+app.get(["/", "/api"], (req, res) => {
     res.send("OneClick BD Server is Running...");
 });
+
+app.use(["/api/auth", "/auth"], authRoutes);
+app.use(["/api/users", "/users"], userRoutes);
+app.use(["/api/products", "/products"], productRoutes);
+app.use(["/api/categories", "/categories"], categoryRoutes);
+app.use(["/api/cart", "/cart"], cartRoutes);
+app.use(["/api/orders", "/orders"], orderRoutes);
+app.use(["/api/settings", "/settings"], settingsRoutes);
+app.use(["/api/banners", "/banners"], bannerRoutes);
 
 if (process.env.VERCEL) {
     module.exports = app;

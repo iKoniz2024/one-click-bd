@@ -27,7 +27,7 @@ function StockBar({ stock, maxStock }) {
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
-            isLow ? "bg-foreground" : "bg-primary"
+            isLow ? "bg-destructive" : "bg-primary"
           }`}
           style={{ width: `${percentage}%` }}
         />
@@ -134,7 +134,7 @@ export default function FlashSaleProductCard({ product, index, maxStock }) {
                     e.preventDefault();
                     setShowModal(true);
                   }}
-                  className="w-full rounded-lg bg-foreground py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+                  className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm"
                 >
                   {product.stock === 0 ? "Unavailable" : "অর্ডার করুন"}
                 </button>

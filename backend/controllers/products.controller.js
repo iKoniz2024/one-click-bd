@@ -81,7 +81,7 @@ const createProduct = async (req, res) => {
         };
 
         const result = await productsCollection.insertOne(newProduct);
-        clearCache();
+        clearCache("products");
 
         res.status(201).send({
             message: "Product created successfully",
@@ -102,6 +102,8 @@ const getBestSellingProductsInternal = async (db) => {
 
     let products = await ordersCollection
         .aggregate([
+            { $sort: { createdAt: -1 } },
+            { $limit: 1000 },
             { $unwind: "$items" },
             {
                 $project: {
@@ -196,20 +198,12 @@ const getAllProducts = async (req, res) => {
 
         const query = {};
 
-        if (search) {
+        if (search && search.trim()) {
+            const cleanSearch = search.trim();
             query.$or = [
-                {
-                    title: {
-                        $regex: search,
-                        $options: "i",
-                    },
-                },
-                {
-                    brand: {
-                        $regex: search,
-                        $options: "i",
-                    },
-                },
+                { title: { $regex: cleanSearch, $options: "i" } },
+                { brand: { $regex: cleanSearch, $options: "i" } },
+                { tags: { $regex: cleanSearch, $options: "i" } }
             ];
         }
 
@@ -358,7 +352,7 @@ const updateProduct = async (req, res) => {
             return res.status(404).send({ message: "Product not found" });
         }
 
-        clearCache();
+        clearCache("products");
         res.send({ message: "Product updated successfully" });
 
     } catch (error) {
@@ -379,7 +373,7 @@ const deleteProduct = async (req, res) => {
             return res.status(404).send({ message: "Product not found" });
         }
 
-        clearCache();
+        clearCache("products");
         res.send({ message: "Product deleted successfully" });
 
     } catch (error) {

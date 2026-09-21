@@ -114,7 +114,7 @@ const Navbar = () => {
                         >
                             <ShoppingCart className="size-5" />
                             {mounted && cartCount > 0 && (
-                                <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-foreground text-[10px] font-bold text-background">
+                                <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                                     {cartCount}
                                 </span>
                             )}
@@ -123,7 +123,7 @@ const Navbar = () => {
                         {user ? (
                             <div className="relative hidden sm:block group/profile">
                                 <button
-                                    className="flex size-9 items-center justify-center rounded-full bg-foreground text-sm font-bold text-background transition-opacity hover:opacity-90"
+                                    className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90 shadow-sm"
                                 >
                                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
                                 </button>

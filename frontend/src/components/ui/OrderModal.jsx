@@ -119,8 +119,8 @@ export default function OrderModal({ product, open, onClose }) {
                         }}
                         className={`flex items-center gap-2 rounded-lg border-2 p-1.5 transition-all ${
                           isSelected
-                            ? "border-foreground bg-muted/40 ring-1 ring-foreground"
-                            : "border-border hover:border-foreground/50 bg-background"
+                            ? "border-primary bg-primary/10 ring-1 ring-primary"
+                            : "border-border hover:border-primary/50 bg-background"
                         }`}
                       >
                         <div className="size-8 overflow-hidden rounded border border-border bg-muted shrink-0">
@@ -150,8 +150,8 @@ export default function OrderModal({ product, open, onClose }) {
                       onClick={() => setSelectedSize(size)}
                       className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
                         selectedSize === size
-                          ? "border-foreground bg-foreground text-background"
-                          : "border-border text-foreground hover:border-foreground/50"
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border text-foreground hover:border-primary/50"
                       }`}
                     >
                       {size}
@@ -194,7 +194,7 @@ export default function OrderModal({ product, open, onClose }) {
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock}
-            className="flex items-center gap-2 rounded-lg bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm"
           >
             <ShoppingCart className="size-4" />
             Add to cart

@@ -9,7 +9,7 @@ import { LayoutDashboard, ShoppingBag, Tags, Image as ImageIcon, ShoppingCart, S
 export default function Sidebar({ open, onClose }) {
   const { siteName, logo } = useSettings();
   const pathname = usePathname();
-  
+
   const menuItems = [
     {
       name: "Dashboard",
@@ -63,16 +63,15 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 border-r bg-card p-5 transition-transform duration-200 lg:static lg:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r bg-card p-5 transition-transform duration-200 lg:static lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <img src={logo} alt={siteName} className="mb-6 h-16 w-auto dark:invert" />
 
         <nav className="space-y-1">
           {menuItems.map((item) => {
-            const isActive = item.path === "/dashboard" 
-              ? pathname === "/dashboard" 
+            const isActive = item.path === "/dashboard"
+              ? pathname === "/dashboard"
               : pathname.startsWith(item.path);
 
             const Icon = item.icon;
@@ -82,11 +81,10 @@ export default function Sidebar({ open, onClose }) {
                 key={item.path}
                 href={item.path}
                 onClick={onClose}
-                className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
-                  isActive
+                className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                  }`}
               >
                 <Icon className={`size-5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
                 {item.name}

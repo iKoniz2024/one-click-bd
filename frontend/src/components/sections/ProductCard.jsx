@@ -29,7 +29,7 @@ function StockBar({ stock, maxStock }) {
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
-            isLow ? "bg-foreground" : "bg-primary"
+            isLow ? "bg-destructive" : "bg-primary"
           }`}
           style={{ width: `${percentage}%` }}
         />
@@ -42,20 +42,20 @@ const badgeConfig = {
   "best-seller": {
     label: "Best Seller",
     icon: Trophy,
-    className: "bg-foreground text-background",
-    ring: "ring-2 ring-foreground/30",
+    className: "bg-primary text-primary-foreground",
+    ring: "ring-2 ring-primary/30",
   },
   "top-rated": {
     label: "Top Rated",
     icon: Star,
-    className: "bg-foreground text-background",
-    ring: "ring-2 ring-foreground/30",
+    className: "bg-primary text-primary-foreground",
+    ring: "ring-2 ring-primary/30",
   },
   popular: {
     label: "Popular",
     icon: Flame,
-    className: "bg-foreground text-background",
-    ring: "ring-2 ring-foreground/30",
+    className: "bg-secondary text-secondary-foreground",
+    ring: "ring-2 ring-secondary/30",
   },
 };
 
@@ -164,7 +164,7 @@ export default function ProductCard({ product, index, badge }) {
                     e.preventDefault();
                     setShowModal(true);
                   }}
-                  className="w-full rounded-lg bg-foreground py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+                  className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm"
                 >
                   {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
                 </button>

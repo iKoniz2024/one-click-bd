@@ -18,21 +18,21 @@ const login = async (req, res) => {
         });
 
         if (!user) {
-    return res.status(401).json({
-        success: false,
-        message: "Validation failed",
-        errors: [
-            {
-                field: "email",
-                message: "Invalid email or password"
-            },
-            {
-                field: "password",
-                message: "Invalid email or password"
-            }
-        ]
-    });
-}
+            return res.status(401).json({
+                success: false,
+                message: "Validation failed",
+                errors: [
+                    {
+                        field: "email",
+                        message: "Invalid email or password"
+                    },
+                    {
+                        field: "password",
+                        message: "Invalid email or password"
+                    }
+                ]
+            });
+        }
 
         const isPasswordMatched = await bcrypt.compare(
             password,
@@ -40,21 +40,21 @@ const login = async (req, res) => {
         );
 
         if (!isPasswordMatched) {
-    return res.status(401).json({
-        success: false,
-        message: "Validation failed",
-        errors: [
-            {
-                field: "email",
-                message: "Invalid email or password"
-            },
-            {
-                field: "password",
-                message: "Invalid email or password"
-            }
-        ]
-    });
-}
+            return res.status(401).json({
+                success: false,
+                message: "Validation failed",
+                errors: [
+                    {
+                        field: "email",
+                        message: "Invalid email or password"
+                    },
+                    {
+                        field: "password",
+                        message: "Invalid email or password"
+                    }
+                ]
+            });
+        }
 
         const accessToken = jwt.sign(
             {
@@ -107,9 +107,9 @@ const login = async (req, res) => {
         console.log(error);
 
         res.status(500).json({
-    success: false,
-    message: "Internal Server Error"
-});
+            success: false,
+            message: "Internal Server Error"
+        });
     }
 };
 
@@ -141,9 +141,9 @@ const logout = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({
-    success: false,
-    message: "Internal Server Error"
-});
+            success: false,
+            message: "Internal Server Error"
+        });
     }
 };
 
@@ -151,12 +151,12 @@ const refreshToken = async (req, res) => {
     try {
         const token = req.cookies.refreshToken;
 
-       if (!token) {
-    return res.status(401).json({
-        success: false,
-        message: "Refresh token not found"
-    });
-       }
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token not found"
+            });
+        }
 
         const decoded = jwt.verify(
             token,
@@ -171,12 +171,12 @@ const refreshToken = async (req, res) => {
             _id: new ObjectId(decoded.id)
         });
 
-       if (!user) {
-    return res.status(404).json({
-        success: false,
-        message: "User not found"
-    });
-}
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
         const accessToken = jwt.sign(
             {
@@ -227,9 +227,9 @@ const refreshToken = async (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(401).json({
-    success: false,
-    message: "Invalid refresh token"
-});
+            success: false,
+            message: "Invalid refresh token"
+        });
 
     }
 };

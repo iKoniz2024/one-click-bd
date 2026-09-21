@@ -45,7 +45,7 @@ export default function NewArrivalsProductCard({ product, index }) {
                 loading="lazy"
               />
               {hasDiscount && (
-                <div className="absolute left-0 top-4 z-10 rounded-r bg-foreground px-2 py-1 text-[10px] font-bold text-background">
+                <div className="absolute left-0 top-4 z-10 rounded-r bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground">
                   -{Math.round(product.discountPercentage)}%
                 </div>
               )}
@@ -77,7 +77,7 @@ export default function NewArrivalsProductCard({ product, index }) {
               <button
                 disabled={isOutOfStock}
                 onClick={() => setShowModal(true)}
-                className="w-full rounded bg-foreground py-1.5 text-[11px] font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+                className="w-full rounded bg-primary py-1.5 text-[11px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
               >
                 {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
               </button>

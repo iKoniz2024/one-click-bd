@@ -179,10 +179,16 @@ const getCart = async (req, res) => {
 const updateCart = async (req, res) => {
     try {
         const { productId } = req.params;
-        const { quantity } = req.body;
+        const { quantity, size = "", color = "" } = req.body;
 
         const db = getDB();
         const cartsCollection = db.collection("carts");
+
+        const targetElem = {
+            productId: new ObjectId(productId),
+            size: String(size || ""),
+            color: String(color || "")
+        };
 
         if (Number(quantity) <= 0) {
             const result = await cartsCollection.updateOne(
@@ -191,9 +197,7 @@ const updateCart = async (req, res) => {
                 },
                 {
                     $pull: {
-                        items: {
-                            productId: new ObjectId(productId)
-                        }
+                        items: targetElem
                     },
                     $set: {
                         updatedAt: new Date()
@@ -215,7 +219,9 @@ const updateCart = async (req, res) => {
         const result = await cartsCollection.updateOne(
             {
                 userId: new ObjectId(req.user.id),
-                "items.productId": new ObjectId(productId)
+                items: {
+                    $elemMatch: targetElem
+                }
             },
             {
                 $set: {
@@ -247,20 +253,24 @@ const updateCart = async (req, res) => {
 const removeFromCart = async (req, res) => {
     try {
         const { productId } = req.params;
+        const { size = "", color = "" } = req.query || req.body || {};
 
         const db = getDB();
         const cartsCollection = db.collection("carts");
 
+        const targetElem = {
+            productId: new ObjectId(productId),
+            size: String(size || ""),
+            color: String(color || "")
+        };
+
         const result = await cartsCollection.updateOne(
             {
-                userId: new ObjectId(req.user.id),
-                "items.productId": new ObjectId(productId)
+                userId: new ObjectId(req.user.id)
             },
             {
                 $pull: {
-                    items: {
-                        productId: new ObjectId(productId)
-                    }
+                    items: targetElem
                 },
                 $set: {
                     updatedAt: new Date()
@@ -268,7 +278,7 @@ const removeFromCart = async (req, res) => {
             }
         );
 
-        if (result.matchedCount === 0) {
+        if (result.modifiedCount === 0) {
             return res.status(404).send({
                 message: "Product not found in cart"
             });

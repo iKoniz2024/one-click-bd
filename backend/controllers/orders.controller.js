@@ -10,7 +10,6 @@ const createOrder = async (req, res) => {
         const { paymentMethod, shippingAddress, deliveryArea } = req.body;
 
         const db = getDB();
-
         const cartsCollection = db.collection("carts");
         const productsCollection = db.collection("products");
         const ordersCollection = db.collection("orders");
@@ -61,42 +60,49 @@ const createOrder = async (req, res) => {
             });
         }
 
+        // Atomic Stock Deduction Phase with Rollback Guarantee
+        const deductedItems = [];
+        let stockError = null;
+
         for (const item of cart) {
-            const product = await productsCollection.findOne({
-                _id: item.productId,
-            });
+            const pId = new ObjectId(item.productId);
+            const updateRes = await productsCollection.findOneAndUpdate(
+                { _id: pId, stock: { $gte: item.quantity } },
+                { $inc: { stock: -item.quantity } },
+                { returnDocument: "after" }
+            );
 
-            if (!product) {
-                return res.status(404).send({
-                    message: `${item.title} not found`,
-                });
+            if (!updateRes) {
+                stockError = `Insufficient stock available for ${item.title}`;
+                break;
             }
 
-            if (
-                product.stock === 0 ||
-                product.availabilityStatus === "Out of Stock"
-            ) {
-                return res.status(400).send({
-                    message: `${item.title} is out of stock`,
-                });
-            }
+            deductedItems.push({ productId: pId, quantity: item.quantity, newStock: updateRes.stock });
+        }
 
-            if (item.quantity > product.stock) {
-                return res.status(400).send({
-                    message: `Only ${product.stock} ${item.title} available in stock`,
-                });
+        if (stockError) {
+            // Rollback any stock deducted so far
+            for (const dItem of deductedItems) {
+                await productsCollection.updateOne(
+                    { _id: dItem.productId },
+                    { $inc: { stock: dItem.quantity } }
+                );
+            }
+            return res.status(400).send({ message: stockError });
+        }
+
+        // Mark items Out of Stock if remaining stock reached zero
+        for (const dItem of deductedItems) {
+            if (dItem.newStock <= 0) {
+                await productsCollection.updateOne(
+                    { _id: dItem.productId },
+                    { $set: { availabilityStatus: "Out of Stock", stock: 0 } }
+                );
             }
         }
 
-        const totalItems = cart.reduce(
-            (sum, item) => sum + item.quantity,
-            0
-        );
-
-        const totalPrice = cart.reduce(
-            (sum, item) => sum + item.subtotal,
-            0
-        );
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = cart.reduce((sum, item) => sum + item.subtotal, 0);
 
         const FREE_SHIPPING_THRESHOLD = 1000;
         const SHIPPING_INSIDE_DHAKA = 60;
@@ -106,7 +112,12 @@ const createOrder = async (req, res) => {
         const shippingCost = isFreeShipping ? 0 : (deliveryArea === "inside_dhaka" ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA);
         const grandTotal = totalPrice + shippingCost;
 
+        const tempOrderId = new ObjectId();
+        const orderShortId = tempOrderId.toString().slice(-8).toUpperCase();
+
         const order = {
+            _id: tempOrderId,
+            orderShortId,
             userId: new ObjectId(req.user.id),
             items: cart,
             totalItems,
@@ -123,44 +134,27 @@ const createOrder = async (req, res) => {
         };
 
         const result = await ordersCollection.insertOne(order);
-        order._id = result.insertedId;
 
-        // Trigger Meta Conversions API Purchase Event (asynchronous & non-blocking)
+        // Trigger Meta Conversions API Purchase Event
         sendPurchaseEvent(order, req);
 
         await cartsCollection.deleteOne({
             userId: new ObjectId(req.user.id),
         });
 
-        // Deduct product stock
-        for (const item of cart) {
-            if (item.productId) {
-                const updatedProduct = await productsCollection.findOneAndUpdate(
-                    { _id: new ObjectId(item.productId) },
-                    { $inc: { stock: -item.quantity } },
-                    { returnDocument: "after" }
-                );
-                if (updatedProduct && updatedProduct.stock <= 0) {
-                    await productsCollection.updateOne(
-                        { _id: new ObjectId(item.productId) },
-                        { $set: { availabilityStatus: "Out of Stock", stock: 0 } }
-                    );
-                }
-            }
-        }
-
-        clearCache();
+        clearCache("orders");
+        clearCache("products");
 
         sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
 
         res.status(201).send({
             message: "Order placed successfully",
             insertedId: result.insertedId,
+            orderShortId,
         });
 
     } catch (error) {
         console.log(error);
-
         res.status(500).send({
             message: "Internal Server Error",
         });
@@ -171,32 +165,26 @@ const createGuestOrder = async (req, res) => {
     try {
         const { items, paymentMethod, shippingAddress, deliveryArea } = req.body;
 
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).send({ message: "Cart items are required" });
+        }
+
         const db = getDB();
         const productsCollection = db.collection("products");
         const ordersCollection = db.collection("orders");
 
         const cart = [];
-
         for (const item of items) {
+            if (!ObjectId.isValid(item.productId)) {
+                return res.status(400).send({ message: "Invalid product id" });
+            }
             const product = await productsCollection.findOne({
                 _id: new ObjectId(item.productId),
             });
 
             if (!product) {
                 return res.status(404).send({
-                    message: `Product not found`,
-                });
-            }
-
-            if (product.stock === 0 || product.availabilityStatus === "Out of Stock") {
-                return res.status(400).send({
-                    message: `${product.title} is out of stock`,
-                });
-            }
-
-            if (item.quantity > product.stock) {
-                return res.status(400).send({
-                    message: `Only ${product.stock} ${product.title} available in stock`,
+                    message: "Product not found",
                 });
             }
 
@@ -205,12 +193,53 @@ const createGuestOrder = async (req, res) => {
                 title: product.title,
                 thumbnail: item.colorImage || item.thumbnail || product.thumbnail,
                 price: product.price,
-                quantity: item.quantity,
+                quantity: Number(item.quantity || 1),
                 size: item.size || "",
                 color: item.color || "",
                 colorImage: item.colorImage || "",
-                subtotal: item.quantity * product.price,
+                subtotal: Number(item.quantity || 1) * product.price,
             });
+        }
+
+        // Atomic Stock Deduction Phase with Rollback Guarantee
+        const deductedItems = [];
+        let stockError = null;
+
+        for (const item of cart) {
+            const pId = new ObjectId(item.productId);
+            const updateRes = await productsCollection.findOneAndUpdate(
+                { _id: pId, stock: { $gte: item.quantity } },
+                { $inc: { stock: -item.quantity } },
+                { returnDocument: "after" }
+            );
+
+            if (!updateRes) {
+                stockError = `Insufficient stock available for ${item.title}`;
+                break;
+            }
+
+            deductedItems.push({ productId: pId, quantity: item.quantity, newStock: updateRes.stock });
+        }
+
+        if (stockError) {
+            // Rollback any stock deducted so far
+            for (const dItem of deductedItems) {
+                await productsCollection.updateOne(
+                    { _id: dItem.productId },
+                    { $inc: { stock: dItem.quantity } }
+                );
+            }
+            return res.status(400).send({ message: stockError });
+        }
+
+        // Update availability status for out of stock products
+        for (const dItem of deductedItems) {
+            if (dItem.newStock <= 0) {
+                await productsCollection.updateOne(
+                    { _id: dItem.productId },
+                    { $set: { availabilityStatus: "Out of Stock", stock: 0 } }
+                );
+            }
         }
 
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -224,7 +253,12 @@ const createGuestOrder = async (req, res) => {
         const shippingCost = isFreeShipping ? 0 : (deliveryArea === "inside_dhaka" ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA);
         const grandTotal = totalPrice + shippingCost;
 
+        const tempOrderId = new ObjectId();
+        const orderShortId = tempOrderId.toString().slice(-8).toUpperCase();
+
         const order = {
+            _id: tempOrderId,
+            orderShortId,
             userId: null,
             guestPhone: shippingAddress.phone,
             guestEmail: shippingAddress.email,
@@ -243,26 +277,9 @@ const createGuestOrder = async (req, res) => {
         };
 
         const result = await ordersCollection.insertOne(order);
-        order._id = result.insertedId;
 
-        // Deduct product stock
-        for (const item of cart) {
-            if (item.productId) {
-                const updatedProduct = await productsCollection.findOneAndUpdate(
-                    { _id: new ObjectId(item.productId) },
-                    { $inc: { stock: -item.quantity } },
-                    { returnDocument: "after" }
-                );
-                if (updatedProduct && updatedProduct.stock <= 0) {
-                    await productsCollection.updateOne(
-                        { _id: new ObjectId(item.productId) },
-                        { $set: { availabilityStatus: "Out of Stock", stock: 0 } }
-                    );
-                }
-            }
-        }
-
-        clearCache();
+        clearCache("orders");
+        clearCache("products");
 
         sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
 
@@ -270,11 +287,11 @@ const createGuestOrder = async (req, res) => {
             message: "Order placed successfully",
             insertedId: result.insertedId,
             orderId: result.insertedId,
+            orderShortId,
         });
 
     } catch (error) {
         console.log(error);
-
         res.status(500).send({
             message: "Internal Server Error",
         });
@@ -297,30 +314,20 @@ const trackOrder = async (req, res) => {
         let order = null;
 
         if (orderId) {
-            // Try full ObjectId first
-            try {
+            const cleanId = String(orderId).trim().toUpperCase();
+            
+            // 1. Check by ObjectId if valid
+            if (ObjectId.isValid(orderId)) {
                 order = await ordersCollection.findOne({
                     _id: new ObjectId(orderId),
                 });
-            } catch {
-                // Not a valid ObjectId, try short ID match
             }
 
-            // If not found, try matching by short ID (last 8 chars) directly in MongoDB
-            if (!order && orderId && orderId.trim().length > 0) {
-                const cleanShortId = orderId.trim().toUpperCase();
-                try {
-                    order = await ordersCollection.findOne({
-                        $expr: {
-                            $regexMatch: {
-                                input: { $toString: "$_id" },
-                                regex: new RegExp(cleanShortId + "$", "i")
-                            }
-                        }
-                    });
-                } catch {
-                    // Fallback search
-                }
+            // 2. Check by orderShortId (O(1) indexed lookup)
+            if (!order) {
+                order = await ordersCollection.findOne({
+                    orderShortId: cleanId,
+                });
             }
 
             if (!order) {
@@ -336,11 +343,12 @@ const trackOrder = async (req, res) => {
                 });
             }
         } else if (phone) {
+            const cleanPhone = String(phone).trim();
             const orders = await ordersCollection
                 .find({
                     $or: [
-                        { guestPhone: phone },
-                        { "shippingAddress.phone": phone },
+                        { guestPhone: cleanPhone },
+                        { "shippingAddress.phone": cleanPhone },
                     ],
                 })
                 .sort({ createdAt: -1 })
@@ -360,7 +368,6 @@ const trackOrder = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-
         res.status(500).send({
             message: "Internal Server Error",
         });

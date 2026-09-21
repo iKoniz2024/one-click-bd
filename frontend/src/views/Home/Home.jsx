@@ -29,7 +29,7 @@ export default function Home({ initialData }) {
       <Categories initialData={initialData?.categoriesData} />
       <BestSellingProducts initialData={initialData?.bestSellingData} />
       <FlashSale initialData={initialData?.flashSaleData} />
-      <WhyChooseUs />
+      {/* <WhyChooseUs /> */}
       <FAQ />
     </div>
   );

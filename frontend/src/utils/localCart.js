@@ -1,6 +1,7 @@
 const CART_KEY = "infinity_store_cart";
 
 export function getLocalCart() {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(CART_KEY);
     if (!raw) return [];
@@ -19,7 +20,12 @@ export function getLocalCart() {
 }
 
 export function setLocalCart(items) {
-  localStorage.setItem(CART_KEY, JSON.stringify(items));
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(items));
+  } catch {
+    // Ignore quota errors
+  }
 }
 
 export function addToLocalCart(item) {
@@ -79,5 +85,10 @@ export function getLocalCartCount() {
 }
 
 export function clearLocalCart() {
-  localStorage.removeItem(CART_KEY);
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(CART_KEY);
+  } catch {
+    // Ignore
+  }
 }
