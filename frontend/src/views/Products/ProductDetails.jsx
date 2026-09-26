@@ -51,9 +51,10 @@ function ProductSkeleton() {
 import usePageTitle from "@/hooks/usePageTitle";
 import { trackMetaPixelEvent } from "@/utils/metaPixel";
 
-export default function ProductDetails({ children }) {
+export default function ProductDetails({ id: propId, initialData }) {
   const { siteName } = useSettings();
-  const { id } = useParams();
+  const routeParams = useParams();
+  const id = propId || routeParams?.id;
   const router = useRouter();
   const { addToCart } = useAddToCart();
   const { user } = useAuth();
@@ -64,10 +65,24 @@ export default function ProductDetails({ children }) {
   const [activeDisplayImage, setActiveDisplayImage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50, show: false });
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y, show: true });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomPos((prev) => ({ ...prev, show: false }));
+  };
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: () => getProductById(id),
+    initialData: initialData || undefined,
+    staleTime: 10 * 60 * 1000,
     enabled: !!id,
   });
 
@@ -189,15 +204,24 @@ export default function ProductDetails({ children }) {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left - Images lg:w-[35%] */}
           <div className="flex flex-col gap-3 lg:w-[35%]">
-            <div className="relative overflow-hidden rounded-xl border border-border bg-muted/30 flex items-center justify-center">
+            <div
+              className="relative overflow-hidden rounded-xl border border-border bg-muted/30 flex items-center justify-center cursor-zoom-in select-none"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
               <img
                 src={mainDisplayImage}
                 alt={product.title}
-                className="aspect-square max-h-[380px] sm:max-h-[440px] lg:max-h-[460px] w-full object-contain p-2"
-                loading="lazy"
+                className="aspect-square max-h-[380px] sm:max-h-[440px] lg:max-h-[460px] w-full object-contain p-2 transition-transform duration-150 ease-out"
+                style={{
+                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  transform: zoomPos.show ? "scale(2.4)" : "scale(1)",
+                }}
+                loading="eager"
+                fetchPriority="high"
               />
               {hasDiscount && (
-                <div className="absolute left-3 top-3 z-10">
+                <div className="absolute left-3 top-3 z-10 pointer-events-none">
                   <Badge className="bg-secondary text-secondary-foreground text-xs font-semibold shadow-sm">
                     -{Math.round(product.discountPercentage)}%
                   </Badge>

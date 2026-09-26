@@ -71,7 +71,7 @@ export default function AdminCategories({ children }) {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: getCategories,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const categories = data ?? [];

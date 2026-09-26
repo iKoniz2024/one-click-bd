@@ -48,7 +48,15 @@ app.use(
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "30d" }));
+
+// Cache-Control headers for public API GET endpoints
+app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.includes("/auth") && !req.path.includes("/orders") && !req.path.includes("/cart") && !req.path.includes("/users")) {
+        res.set("Cache-Control", "public, max-age=600, s-maxage=600, stale-while-revalidate=1200");
+    }
+    next();
+});
 
 if (process.env.VERCEL) {
     app.use(async (req, res, next) => {
@@ -83,9 +91,11 @@ if (process.env.VERCEL) {
 async function startServer() {
     try {
         await connectDB();
-        app.listen(port, () => {
+        const server = app.listen(port, () => {
             console.log(`Server running on port ${port}`);
         });
+        server.keepAliveTimeout = 65000;
+        server.headersTimeout = 66000;
     } catch (error) {
         console.log(error);
     }

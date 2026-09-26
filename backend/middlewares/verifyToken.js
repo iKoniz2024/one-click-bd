@@ -1,8 +1,19 @@
 const jwt = require("jsonwebtoken");
 
+const getToken = (req) => {
+    if (req.cookies && req.cookies.accessToken) {
+        return req.cookies.accessToken;
+    }
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        return authHeader.substring(7).trim();
+    }
+    return null;
+};
+
 const verifyToken = (req, res, next) => {
     try {
-        const token = req.cookies.accessToken;
+        const token = getToken(req);
 
         if (!token) {
             return res.status(401).send({
@@ -28,7 +39,7 @@ const verifyToken = (req, res, next) => {
 
 const verifyOptionalToken = (req, res, next) => {
     try {
-        const token = req.cookies.accessToken;
+        const token = getToken(req);
 
         if (!token) {
             req.user = null;

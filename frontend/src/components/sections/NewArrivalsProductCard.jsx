@@ -4,12 +4,15 @@ import Link from 'next/link';
 import { useState } from "react";
 
 import { motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
+import { getProductById } from "@/services/product.api";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function NewArrivalsProductCard({ product, index }) {
   const [showModal, setShowModal] = useState(false);
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
@@ -17,6 +20,16 @@ export default function NewArrivalsProductCard({ product, index }) {
     ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
     : null;
   const isOutOfStock = product.stock === 0;
+
+  const handlePrefetch = () => {
+    if (product?._id) {
+      queryClient.prefetchQuery({
+        queryKey: ["product", String(product._id)],
+        queryFn: () => getProductById(product._id),
+        staleTime: 10 * 60 * 1000,
+      });
+    }
+  };
 
   return (
     <>
@@ -35,14 +48,19 @@ export default function NewArrivalsProductCard({ product, index }) {
         }}
         className="shrink-0 w-37.5 sm:w-45"
       >
-        <div className="flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-card">
-          <Link href={`/product/${product._id}`} className="block">
+        <div className="group flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-card">
+          <Link
+            href={`/product/${product._id}`}
+            className="block"
+            onMouseEnter={handlePrefetch}
+            onTouchStart={handlePrefetch}
+          >
             {/* Section 1: Fixed Consistent Image Section */}
             <div className="relative aspect-square h-40 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 flex items-center justify-center border-b border-border/40">
               <img
                 src={product.thumbnail || product.images?.[0] || null}
                 alt={product.title}
-                className="h-full w-full object-contain p-2 transition-transform duration-300 hover:scale-105"
+                className="h-full w-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-110 sm:group-hover:scale-115"
                 loading="lazy"
               />
               {hasDiscount && (

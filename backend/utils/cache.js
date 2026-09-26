@@ -42,19 +42,30 @@ const withCache = async (key, ttlSeconds, fetchFunction) => {
 const warmUpCache = async (db) => {
     if (!db) return;
     try {
-        console.log("Warming up essential cache (banners, categories)...");
+        console.log("Warming up essential cache (banners, categories, home products)...");
 
         // 1. Warm up Banners
         const bannersCollection = db.collection("banners");
-        await withCache("banners", 30, async () => {
+        await withCache("banners", 600, async () => {
             return await bannersCollection.find({}).sort({ createdAt: -1 }).toArray();
         });
 
         // 2. Warm up Categories
         const categoriesCollection = db.collection("categories");
-        await withCache("categoriesWithCounts", 30, async () => {
+        await withCache("categoriesWithCounts", 600, async () => {
             const categories = await categoriesCollection.find().sort({ createdAt: -1 }).toArray();
             return categories;
+        });
+
+        // 3. Warm up New Arrivals
+        const productsCollection = db.collection("products");
+        await withCache("newArrivals", 600, async () => {
+            return await productsCollection
+                .find({})
+                .project({ description: 0, dimensions: 0, reviews: 0, images: 0 })
+                .sort({ _id: -1 })
+                .limit(12)
+                .toArray();
         });
 
         console.log("Essential cache warmup completed successfully!");

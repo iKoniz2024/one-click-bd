@@ -33,9 +33,13 @@ axiosSecure.interceptors.response.use(
         // Retry the original request
         return axiosSecure(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, redirect to login
+        // Only redirect to login if user is accessing a protected route
         if (typeof window !== "undefined") {
-          window.location.href = "/login";
+          const path = window.location.pathname;
+          const isProtectedRoute = path.startsWith("/dashboard") || path.startsWith("/profile") || path.startsWith("/my-orders") || path.startsWith("/change-password");
+          if (isProtectedRoute) {
+            window.location.href = "/login";
+          }
         }
         return Promise.reject(refreshError);
       }

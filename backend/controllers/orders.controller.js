@@ -607,42 +607,20 @@ const updateOrderStatus = async (req, res) => {
         }
 
         if (
-            orderStatus === "delivered" &&
-            order.orderStatus !== "delivered"
+            orderStatus === "cancelled" &&
+            order.orderStatus !== "cancelled"
         ) {
-            for (const item of order.items) {
-                const product = await productsCollection.findOne({
-                    _id: item.productId,
-                });
-
-                if (!product) {
-                    return res.status(404).send({
-                        message: `${item.title} not found`,
-                    });
+            for (const item of order.items || []) {
+                if (item.productId) {
+                    const pId = ObjectId.isValid(item.productId) ? new ObjectId(item.productId) : item.productId;
+                    await productsCollection.updateOne(
+                        { _id: pId },
+                        {
+                            $inc: { stock: Number(item.quantity || 1) },
+                            $set: { availabilityStatus: "In Stock" }
+                        }
+                    );
                 }
-
-                if (product.stock < item.quantity) {
-                    return res.status(400).send({
-                        message: `${item.title} is out of stock`,
-                    });
-                }
-
-                const newStock = product.stock - item.quantity;
-
-                await productsCollection.updateOne(
-                    {
-                        _id: item.productId,
-                    },
-                    {
-                        $set: {
-                            stock: newStock,
-                            availabilityStatus:
-                                newStock > 0
-                                    ? "In Stock"
-                                    : "Out of Stock",
-                        },
-                    }
-                );
             }
         }
 
@@ -685,6 +663,7 @@ const cancelOrder = async (req, res) => {
 
         const db = getDB();
         const ordersCollection = db.collection("orders");
+        const productsCollection = db.collection("products");
 
         const order = await ordersCollection.findOne({
             _id: new ObjectId(id)
@@ -709,6 +688,20 @@ const cancelOrder = async (req, res) => {
             return res.status(400).send({
                 message: "Only pending orders can be cancelled"
             });
+        }
+
+        // Restock products when order is cancelled
+        for (const item of order.items || []) {
+            if (item.productId) {
+                const pId = ObjectId.isValid(item.productId) ? new ObjectId(item.productId) : item.productId;
+                await productsCollection.updateOne(
+                    { _id: pId },
+                    {
+                        $inc: { stock: Number(item.quantity || 1) },
+                        $set: { availabilityStatus: "In Stock" }
+                    }
+                );
+            }
         }
 
         await ordersCollection.updateOne(

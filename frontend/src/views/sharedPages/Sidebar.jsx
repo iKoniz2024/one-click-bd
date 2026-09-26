@@ -5,10 +5,35 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useSettings from "@/hooks/useSettings";
 import { LayoutDashboard, ShoppingBag, Tags, Image as ImageIcon, ShoppingCart, Settings, User, Home } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { getProducts } from "@/services/product.api";
+import { getCategories } from "@/services/category.api";
+import { getBanners } from "@/services/banner.api";
+import { getAllOrders, getDashboardStats } from "@/services/order.api";
+import { getSettings } from "@/services/settings.api";
 
 export default function Sidebar({ open, onClose }) {
   const { siteName, logo } = useSettings();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
+
+  const handlePrefetch = (path) => {
+    const staleTime = 10 * 60 * 1000;
+    if (path === "/dashboard") {
+      queryClient.prefetchQuery({ queryKey: ["admin-dashboard-stats"], queryFn: getDashboardStats, staleTime });
+    } else if (path === "/dashboard/products") {
+      queryClient.prefetchQuery({ queryKey: ["admin-products"], queryFn: getProducts, staleTime });
+      queryClient.prefetchQuery({ queryKey: ["categories"], queryFn: getCategories, staleTime });
+    } else if (path === "/dashboard/categories") {
+      queryClient.prefetchQuery({ queryKey: ["admin-categories"], queryFn: getCategories, staleTime });
+    } else if (path === "/dashboard/banners") {
+      queryClient.prefetchQuery({ queryKey: ["admin-banners"], queryFn: getBanners, staleTime });
+    } else if (path === "/dashboard/orders") {
+      queryClient.prefetchQuery({ queryKey: ["admin-orders"], queryFn: getAllOrders, staleTime });
+    } else if (path === "/dashboard/settings") {
+      queryClient.prefetchQuery({ queryKey: ["settings"], queryFn: getSettings, staleTime });
+    }
+  };
 
   const menuItems = [
     {
@@ -81,6 +106,8 @@ export default function Sidebar({ open, onClose }) {
                 key={item.path}
                 href={item.path}
                 onClick={onClose}
+                onMouseEnter={() => handlePrefetch(item.path)}
+                onTouchStart={() => handlePrefetch(item.path)}
                 className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${isActive
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"

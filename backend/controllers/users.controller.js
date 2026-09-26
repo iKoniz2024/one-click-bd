@@ -1,21 +1,16 @@
 const { getDB } = require("../config/db");
-const { ObjectId } = require("mongodb");
+const { buildIdQuery } = require("../utils/buildIdQuery");
 const bcrypt = require("bcrypt");
 
 const getAllUsers = async (req, res) => {
     try {
         const db = getDB();
-
         const usersCollection = db.collection("users");
 
         const users = await usersCollection.find(
             {},
-            {
-                projection: {
-                    password: 0
-                }
-            }
-        ).toArray();
+            { projection: { password: 0 } }
+        ).sort({ createdAt: -1 }).toArray();
 
         res.status(200).send({
             totalUsers: users.length,
@@ -41,14 +36,8 @@ const getProfile = async (req, res) => {
         const usersCollection = db.collection("users");
 
         const user = await usersCollection.findOne(
-            {
-                _id: new ObjectId(req.user.id)
-            },
-            {
-                projection: {
-                    password: 0
-                }
-            }
+            buildIdQuery(req.user.id),
+            { projection: { password: 0 } }
         );
 
         if (!user) {
@@ -83,12 +72,8 @@ const updateProfile = async (req, res) => {
         if (profilePhoto !== undefined) updateData.profilePhoto = String(profilePhoto).trim();
 
         const result = await usersCollection.updateOne(
-            {
-                _id: new ObjectId(req.user.id)
-            },
-            {
-                $set: updateData
-            }
+            buildIdQuery(req.user.id),
+            { $set: updateData }
         );
 
         if (result.matchedCount === 0) {
@@ -124,9 +109,7 @@ const changePassword = async (req, res) => {
         const db = getDB();
         const usersCollection = db.collection("users");
 
-        const user = await usersCollection.findOne({
-            _id: new ObjectId(req.user.id)
-        });
+        const user = await usersCollection.findOne(buildIdQuery(req.user.id));
 
         if (!user) {
             return res.status(404).send({
@@ -148,9 +131,7 @@ const changePassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await usersCollection.updateOne(
-            {
-                _id: new ObjectId(req.user.id)
-            },
+            buildIdQuery(req.user.id),
             {
                 $set: {
                     password: hashedPassword,

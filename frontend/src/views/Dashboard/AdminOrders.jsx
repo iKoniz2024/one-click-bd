@@ -42,7 +42,7 @@ export default function AdminOrders({ children }) {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-orders"],
     queryFn: getAllOrders,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const orders = Array.isArray(data) ? data : data?.orders ?? [];

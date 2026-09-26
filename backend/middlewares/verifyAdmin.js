@@ -1,15 +1,16 @@
 const { getDB } = require("../config/db");
-const { ObjectId } = require("mongodb");
+const { buildIdQuery } = require("../utils/buildIdQuery");
 
 const verifyAdmin = async (req, res, next) => {
     try {
-        const db = getDB();
+        if (!req.user || !req.user.id) {
+            return res.status(401).send({ message: "Unauthorized" });
+        }
 
+        const db = getDB();
         const usersCollection = db.collection("users");
 
-        const user = await usersCollection.findOne({
-            _id: new ObjectId(req.user.id)
-        });
+        const user = await usersCollection.findOne(buildIdQuery(req.user.id));
 
         if (!user) {
             return res.status(404).send({

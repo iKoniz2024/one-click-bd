@@ -32,11 +32,12 @@ export default function Hero({ initialData }) {
     queryKey: ["banners"],
     queryFn: getBanners,
     initialData,
+    staleTime: 10 * 60 * 1000,
   });
 
   const banners = (data ?? []).filter((b) => b.isActive && (b.image || b.images?.length > 0));
 
-  if (isLoading) {
+  if (isLoading && banners.length === 0) {
     return (
       <section id="hero" className="relative overflow-hidden py-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -68,7 +69,7 @@ export default function Hero({ initialData }) {
           loop={banners.length > 1}
           className="hero-swiper w-full h-auto aspect-[2.3/1] sm:aspect-[2.8/1] md:aspect-[3.2/1] overflow-hidden shadow-sm"
         >
-          {banners.map((banner) => (
+          {banners.map((banner, index) => (
             <SwiperSlide key={banner._id}>
               <Link href="/products" className="block size-full">
                 <div className="relative size-full">
@@ -76,6 +77,8 @@ export default function Hero({ initialData }) {
                     src={banner.image || banner.images?.[0]}
                     alt={banner.title}
                     className="size-full object-cover object-center"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "low"}
                   />
                 </div>
               </Link>

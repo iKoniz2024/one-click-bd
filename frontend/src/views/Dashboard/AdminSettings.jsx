@@ -20,6 +20,7 @@ export default function AdminSettings({ children }) {
   const { isLoading, data } = useQuery({
     queryKey: ["settings"],
     queryFn: getSettings,
+    staleTime: 10 * 60 * 1000,
   });
 
   const [siteName, setSiteName] = useState("");

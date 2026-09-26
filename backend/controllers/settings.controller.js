@@ -1,11 +1,13 @@
 const { getDB } = require("../config/db");
+const { withCache, clearCache } = require("../utils/cache");
 
 const getSettings = async (req, res) => {
   try {
-    const db = getDB();
-    const settingsCollection = db.collection("settings");
-
-    const settings = await settingsCollection.findOne({});
+    const settings = await withCache("settings", 600, async () => {
+      const db = getDB();
+      const settingsCollection = db.collection("settings");
+      return await settingsCollection.findOne({});
+    });
 
     res.status(200).json(settings);
   } catch (error) {
@@ -50,6 +52,7 @@ const updateSettings = async (req, res) => {
       { upsert: true }
     );
 
+    clearCache("settings");
     const updatedSettings = await settingsCollection.findOne({});
 
     res.status(200).json({

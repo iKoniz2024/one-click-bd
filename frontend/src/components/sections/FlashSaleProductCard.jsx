@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import { motion } from "framer-motion";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { getProductById } from "@/services/product.api";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";
@@ -35,12 +37,23 @@ function StockBar({ stock, maxStock }) {
 
 export default function FlashSaleProductCard({ product, index, maxStock }) {
   const [showModal, setShowModal] = useState(false);
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
     ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
     : null;
+
+  const handlePrefetch = () => {
+    if (product?._id) {
+      queryClient.prefetchQuery({
+        queryKey: ["product", String(product._id)],
+        queryFn: () => getProductById(product._id),
+        staleTime: 10 * 60 * 1000,
+      });
+    }
+  };
 
   return (
     <>
@@ -61,6 +74,8 @@ export default function FlashSaleProductCard({ product, index, maxStock }) {
         <Link
           href={`/product/${product._id}`}
           className="group block h-full"
+          onMouseEnter={handlePrefetch}
+          onTouchStart={handlePrefetch}
         >
           <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
             {/* Section 1: Fixed Consistent Image Section */}
@@ -68,7 +83,7 @@ export default function FlashSaleProductCard({ product, index, maxStock }) {
               <img
                 src={product.thumbnail || product.images?.[0] || undefined}
                 alt={product.title}
-                className="h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                className="h-full w-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-110 sm:group-hover:scale-115"
                 loading="lazy"
               />
 

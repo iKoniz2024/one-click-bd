@@ -5,12 +5,16 @@ export const metadata = {
   title: "Flash Sale",
 };
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 600;
 
 async function fetchFlashSale() {
   try {
     const baseUrl = getApiUrl();
-    const res = await fetch(`${baseUrl}/products/flash-sale`, { cache: "no-store" });
+    const res = await fetch(`${baseUrl}/products/flash-sale`, {
+      next: { revalidate: 600 },
+      headers: { Connection: "close" },
+      signal: AbortSignal.timeout(15000),
+    });
     return res.ok ? await res.json() : { products: [] };
   } catch (err) {
     console.error("Failed to fetch flash-sale products:", err.message);

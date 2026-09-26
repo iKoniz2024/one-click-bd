@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
+const { buildIdQuery } = require("../utils/buildIdQuery");
 
 const login = async (req, res) => {
     try {
@@ -149,7 +149,7 @@ const logout = async (req, res) => {
 
 const refreshToken = async (req, res) => {
     try {
-        const token = req.cookies.refreshToken;
+        const token = (req.cookies && req.cookies.refreshToken) || (req.body && req.body.refreshToken);
 
         if (!token) {
             return res.status(401).json({
@@ -167,9 +167,7 @@ const refreshToken = async (req, res) => {
 
         const usersCollection = db.collection("users");
 
-        const user = await usersCollection.findOne({
-            _id: new ObjectId(decoded.id)
-        });
+        const user = await usersCollection.findOne(buildIdQuery(decoded.id));
 
         if (!user) {
             return res.status(404).json({

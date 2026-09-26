@@ -33,10 +33,11 @@ export default function NewArrivals({ initialData }) {
     queryKey: ["new-arrivals"],
     queryFn: getNewArrivals,
     initialData: (initialData?.products?.length > 0) ? initialData : undefined,
+    staleTime: 10 * 60 * 1000,
   });
 
   const products = data?.products ?? [];
-  const showSkeleton = isLoading || (isFetching && products.length === 0);
+  const showSkeleton = (isLoading || isFetching) && products.length === 0;
 
   const scroll = (direction) => {
     if (scrollRef.current) {

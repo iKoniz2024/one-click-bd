@@ -10,6 +10,7 @@ const useSettings = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["settings"],
     queryFn: getSettings,
+    staleTime: 10 * 60 * 1000,
   });
 
   const logo = data?.logo || null;

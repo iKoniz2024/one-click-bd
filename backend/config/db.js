@@ -16,14 +16,22 @@ const client = new MongoClient(uri, {
 });
 
 let db;
+let connectPromise = null;
 let indexesInitialized = false;
 
 async function connectDB() {
-    if (!db) {
-        await client.connect();
-        db = client.db("oneClickBdShop");
-        console.log("MongoDB Connected");
+    if (db) return db;
+
+    if (!connectPromise) {
+        connectPromise = (async () => {
+            await client.connect();
+            db = client.db("oneClickBdShop");
+            console.log("MongoDB Connected");
+            return db;
+        })();
     }
+
+    db = await connectPromise;
 
     if (!indexesInitialized) {
         indexesInitialized = true;

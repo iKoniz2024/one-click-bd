@@ -69,6 +69,7 @@ export default function Products({ initialCategories, initialProducts }) {
     queryKey: ["categories"],
     queryFn: getCategories,
     initialData: initialCategories,
+    staleTime: 10 * 60 * 1000,
   });
 
   const categories = useMemo(() => categoriesData ?? [], [categoriesData]);
@@ -85,12 +86,13 @@ export default function Products({ initialCategories, initialProducts }) {
     queryFn: () => getProducts({ search: searchQuery, category: selectedCategory, sort, page, limit }),
     placeholderData: keepPreviousData,
     initialData: (!searchQuery && !selectedCategory && sort === "newest" && page === 1 && initialProducts?.products?.length > 0) ? initialProducts : undefined,
+    staleTime: 10 * 60 * 1000,
   });
 
   const filteredProducts = data?.products ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalProductsCount = data?.totalProducts ?? 0;
-  const showSkeleton = isLoading || (isFetching && filteredProducts.length === 0);
+  const showSkeleton = (isLoading || isFetching) && filteredProducts.length === 0;
 
   const handleCategoryChange = (slug) => {
     updateCategory(slug === selectedCategory ? "" : slug);

@@ -142,13 +142,13 @@ export default function AdminProducts({ children }) {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: getProducts,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: categoriesData } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const categories = categoriesData ?? [];

@@ -5,10 +5,15 @@ export const metadata = {
   title: "Home",
 };
 
-export const revalidate = 300;
+export const revalidate = 600;
 
 async function fetchHomeData() {
   const baseUrl = getApiUrl();
+  const fetchOpts = {
+    next: { revalidate: 600 },
+    headers: { Connection: "close" },
+    signal: AbortSignal.timeout(15000),
+  };
 
   try {
     const [
@@ -18,11 +23,11 @@ async function fetchHomeData() {
       flashSaleRes,
       bannersRes
     ] = await Promise.all([
-      fetch(`${baseUrl}/categories`, { next: { revalidate: 300 } }),
-      fetch(`${baseUrl}/products/new-arrivals`, { next: { revalidate: 300 } }),
-      fetch(`${baseUrl}/products/best-sellers`, { next: { revalidate: 300 } }),
-      fetch(`${baseUrl}/products/flash-sale`, { next: { revalidate: 300 } }),
-      fetch(`${baseUrl}/banners`, { next: { revalidate: 300 } }),
+      fetch(`${baseUrl}/categories`, fetchOpts),
+      fetch(`${baseUrl}/products/new-arrivals`, fetchOpts),
+      fetch(`${baseUrl}/products/best-sellers`, fetchOpts),
+      fetch(`${baseUrl}/products/flash-sale`, fetchOpts),
+      fetch(`${baseUrl}/banners`, fetchOpts),
     ]);
 
     return {

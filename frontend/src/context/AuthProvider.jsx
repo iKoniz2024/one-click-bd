@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AuthContext } from "./authContext";
 import { getProfile, logoutUser } from "@/services/auth.api";
 
@@ -39,13 +39,13 @@ export default function AuthProvider({ children }) {
 
   useMountEffect(() => { fetchUser(); });
 
-  const info = {
+  const info = useMemo(() => ({
     user,
     setUser,
     loading,
     fetchUser,
     logout,
-  };
+  }), [user, loading, fetchUser, logout]);
 
   return (
     <AuthContext.Provider value={info}>

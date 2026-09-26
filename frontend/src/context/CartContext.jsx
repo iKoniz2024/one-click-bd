@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { CartContext } from "./cartContextValue";
 import { getLocalCartCount } from "@/utils/localCart";
 
@@ -15,8 +15,13 @@ export function CartProvider({ children }) {
     setCartCount(count !== undefined ? count : getLocalCartCount());
   }, []);
 
+  const value = useMemo(() => ({
+    cartCount,
+    refetchCartCount,
+  }), [cartCount, refetchCartCount]);
+
   return (
-    <CartContext.Provider value={{ cartCount, refetchCartCount }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

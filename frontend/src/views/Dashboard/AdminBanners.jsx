@@ -41,7 +41,7 @@ export default function AdminBanners({ children }) {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-banners"],
     queryFn: getBanners,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const banners = data ?? [];

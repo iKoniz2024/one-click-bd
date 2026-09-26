@@ -19,18 +19,20 @@ export default function Providers({ children }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // 1 minute
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes cache retention
         refetchOnWindowFocus: false,
+        retry: 1,
       },
     },
   }));
 
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <ThemeProvider>
-          <CartProvider>
-            <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ThemeProvider>
+            <CartProvider>
               <DynamicFaviconUpdater />
               <MetaPixel />
               {children}
@@ -57,10 +59,10 @@ export default function Providers({ children }) {
                   },
                 }}
               />
-            </QueryClientProvider>
-          </CartProvider>
-        </ThemeProvider>
-      </AuthProvider>
+            </CartProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </HelmetProvider>
   );
 }

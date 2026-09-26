@@ -30,6 +30,8 @@ export async function generateMetadata() {
     const apiUrl = getApiUrl();
     const res = await fetch(`${apiUrl}/settings`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
+      headers: { Connection: "close" },
+      signal: AbortSignal.timeout(15000),
     });
     
     if (res.ok) {

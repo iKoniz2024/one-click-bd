@@ -28,6 +28,7 @@ export default function Categories({ initialData }) {
     queryKey: ["categories-with-counts"],
     queryFn: getCategoriesWithCounts,
     initialData: (Array.isArray(initialData) && initialData.length > 0) ? initialData : undefined,
+    staleTime: 10 * 60 * 1000,
   });
 
   const categories = useMemo(() => {
@@ -41,7 +42,7 @@ export default function Categories({ initialData }) {
     }));
   }, [categoriesData]);
 
-  const showSkeleton = isLoading || (isFetching && categories.length === 0);
+  const showSkeleton = (isLoading || isFetching) && categories.length === 0;
 
   return (
     <section id="categories" className="bg-background py-6 sm:py-10">

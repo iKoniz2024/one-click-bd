@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { useState, useEffect } from "react";
-import { Search, ShoppingCart, Sun, Moon, ChevronDown, Menu, X, Phone, Package, House, LayoutGrid, Store, TrendingUp, Zap } from "lucide-react";
+import { Search, ShoppingCart, Sun, Moon, ChevronDown, Menu, X, Phone, Package, House, LayoutGrid, Store, TrendingUp, Zap, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import useCart from "@/hooks/useCart";
 import useTheme from "@/hooks/useTheme";
@@ -24,6 +24,7 @@ const Navbar = () => {
     const [search, setSearch] = useState("");
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mobileCatOpen, setMobileCatOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     const scrollToSection = (sectionId) => {
@@ -38,6 +39,7 @@ const Navbar = () => {
     const { data: categories } = useQuery({
         queryKey: ["categories"],
         queryFn: getCategories,
+        staleTime: 10 * 60 * 1000,
     });
 
     useEffect(() => {
@@ -50,11 +52,22 @@ const Navbar = () => {
             {/* Top Header */}
             <div className="border-b border-border">
                 <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4">
+                    {/* Mobile/Tablet Left: Menu Toggle Icon */}
+                    <button
+                        onClick={() => setMobileOpen(true)}
+                        className="flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted lg:hidden"
+                        title="Open Menu"
+                    >
+                        <Menu className="size-6" />
+                    </button>
+
+                    {/* Logo (Centered on mobile/tablet, Left on desktop) */}
                     <Link href="/" className="flex items-center shrink-0">
                         {mounted && logo && <img src={logo} alt={siteName} className="h-8 sm:h-14 w-auto dark:invert" />}
                     </Link>
 
-                    <div className="hidden flex-1 max-w-xl mx-6 md:block">
+                    {/* Desktop Search Bar */}
+                    <div className="hidden flex-1 max-w-xl mx-6 lg:block">
                         <div className="relative">
                             <input
                                 type="text"
@@ -81,10 +94,20 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Mobile/Tablet Right: Search Toggle Icon */}
+                    <button
+                        onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+                        className="flex size-10 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted lg:hidden"
+                        title="Search"
+                    >
+                        <Search className="size-5" />
+                    </button>
+
+                    {/* Desktop Actions */}
+                    <div className="hidden items-center gap-2 sm:gap-3 lg:flex">
                         <Link
                             href="/orders"
-                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 md:flex shrink-0"
+                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 lg:flex shrink-0"
                         >
                             <Package className="size-4 shrink-0" />
                             <span>Track Your Order</span>
@@ -92,7 +115,7 @@ const Navbar = () => {
 
                         <a
                             href={`tel:${mounted ? contactPhone : "+8801XXXXXXXXX"}`}
-                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 md:flex shrink-0"
+                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 lg:flex shrink-0"
                         >
                             <Phone className="size-4 shrink-0" />
                             <span>{mounted ? contactPhone : "+8809613111333"}</span>
@@ -163,19 +186,45 @@ const Navbar = () => {
                                 Admin
                             </Link>
                         )}
-
-                        <button
-                            onClick={() => setMobileOpen(true)}
-                            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
-                        >
-                            <Menu className="size-5" />
-                        </button>
                     </div>
                 </div>
+
+                {/* Mobile Expandable Search Bar */}
+                {mobileSearchOpen && (
+                    <div className="border-t border-border bg-background p-3 lg:hidden">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search Product....."
+                                value={search}
+                                autoFocus
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && search.trim()) {
+                                        router.push(`/products?search=${encodeURIComponent(search.trim())}`);
+                                        setMobileSearchOpen(false);
+                                    }
+                                }}
+                                className="w-full rounded-lg border border-border bg-muted/50 py-2.5 pl-4 pr-10 text-sm outline-none focus:border-foreground/30"
+                            />
+                            <button
+                                onClick={() => {
+                                    if (search.trim()) {
+                                        router.push(`/products?search=${encodeURIComponent(search.trim())}`);
+                                        setMobileSearchOpen(false);
+                                    }
+                                }}
+                                className="absolute right-0 top-0 flex h-full items-center justify-center px-3 text-muted-foreground"
+                            >
+                                <Search className="size-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Navigation Bar */}
-            <nav className="hidden border-b border-border md:block">
+            <nav className="hidden border-b border-border lg:block">
                 <div className="mx-auto max-w-7xl px-4">
                     <div className="flex items-center gap-1">
                         <Link href="/" className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition-colors border-b-[3px] ${pathname === "/" ? "border-foreground text-foreground" : "border-transparent text-foreground hover:bg-muted"}`}>
@@ -192,7 +241,7 @@ const Navbar = () => {
                             <div className="invisible opacity-0 group-hover/dropdown:visible group-hover/dropdown:opacity-100 transition-all duration-200 fixed left-1/2 -translate-x-1/2 z-200 w-7xl border-b border-border bg-background shadow-xl">
                                 <div className="mx-auto max-w-7xl p-6">
                                     <div className="grid grid-cols-6 gap-6">
-                                        {categories?.slice(0, 18).map((cat) => (
+                                        {mounted && categories?.slice(0, 18).map((cat) => (
                                             <div key={cat._id}>
                                                 <Link
                                                     href={`/products?category=${cat.slug}`}
@@ -246,7 +295,7 @@ const Navbar = () => {
 
             {/* Mobile Sidebar */}
             {mobileOpen && (
-                <div className="fixed inset-0 z-100 md:hidden">
+                <div className="fixed inset-0 z-100 lg:hidden">
                     <div
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={() => setMobileOpen(false)}
@@ -317,7 +366,7 @@ const Navbar = () => {
                                     </button>
                                     {mobileCatOpen && (
                                         <div className="ml-6 mt-1 space-y-1 border-l-2 border-border pl-4">
-                                            {categories?.map((cat) => (
+                                            {mounted && categories?.map((cat) => (
                                                 <Link
                                                     key={cat._id}
                                                     href={`/products?category=${cat.slug}`}
@@ -410,6 +459,70 @@ const Navbar = () => {
                     </div>
                 </div>
             )}
+
+            {/* Fixed Bottom Navigation Bar for Mobile & Tablet */}
+            <div className="fixed bottom-0 left-0 right-0 z-100 border-t border-border bg-background/95 backdrop-blur-md lg:hidden shadow-2xl">
+                <div className="grid grid-cols-5 items-center px-1 py-2">
+                    <Link
+                        href="/"
+                        className={`flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
+                            pathname === "/" ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        <House className="size-5" />
+                        <span>Home</span>
+                    </Link>
+
+                    <button
+                        onClick={() => setMobileOpen(true)}
+                        className={`flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
+                            mobileOpen ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        <LayoutGrid className="size-5" />
+                        <span>Menu</span>
+                    </button>
+
+                    <Link
+                        href="/cart"
+                        className={`relative flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
+                            pathname === "/cart" ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        <div className="relative">
+                            <ShoppingCart className="size-5" />
+                            {mounted && cartCount > 0 && (
+                                <span className="absolute -right-2 -top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </div>
+                        <span>Cart</span>
+                    </Link>
+
+                    <Link
+                        href="/orders"
+                        className={`flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
+                            pathname === "/orders" ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        <Package className="size-5" />
+                        <span>Orders</span>
+                    </Link>
+
+                    <Link
+                        href={user ? "/dashboard" : "/login"}
+                        className={`flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
+                            pathname.startsWith("/dashboard") || pathname === "/login"
+                                ? "text-primary font-bold"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        <User className="size-5" />
+                        <span>{user ? "Account" : "Account"}</span>
+                    </Link>
+                </div>
+            </div>
         </header>
     );
 };

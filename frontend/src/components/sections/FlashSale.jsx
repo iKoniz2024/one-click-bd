@@ -41,11 +41,12 @@ export default function FlashSale({ initialData }) {
     queryKey: ["flash-sale"],
     queryFn: getFlashSaleProducts,
     initialData: (initialData?.products?.length > 0) ? initialData : undefined,
+    staleTime: 10 * 60 * 1000,
   });
 
   const products = data?.products ?? [];
   const maxStock = data?.maxStock ?? 1;
-  const showSkeleton = isLoading || (isFetching && products.length === 0);
+  const showSkeleton = (isLoading || isFetching) && products.length === 0;
 
   return (
     <section id="flash-sale" className="relative overflow-hidden bg-linear-to-b from-gray-100/80 via-background to-background py-16 sm:py-20 dark:from-gray-900/20">

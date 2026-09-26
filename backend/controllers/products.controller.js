@@ -102,6 +102,7 @@ const getBestSellingProductsInternal = async (db) => {
 
     let products = await ordersCollection
         .aggregate([
+            { $match: { orderStatus: { $ne: "Cancelled" } } },
             { $sort: { createdAt: -1 } },
             { $limit: 1000 },
             { $unwind: "$items" },
@@ -169,6 +170,30 @@ const getBestSellingProductsInternal = async (db) => {
         ])
         .toArray();
 
+    if (products.length === 0) {
+        products = await productsCollection
+            .find({})
+            .project({
+                description: 0,
+                dimensions: 0,
+                reviews: 0,
+                images: 0,
+                sizeMeasurements: 0,
+                warrantyInformation: 0,
+                shippingInformation: 0,
+                returnPolicy: 0,
+                meta: 0,
+                tags: 0,
+                sku: 0,
+                weight: 0,
+                availabilityStatus: 0,
+                minimumOrderQuantity: 0
+            })
+            .sort({ rating: -1, price: -1 })
+            .limit(12)
+            .toArray();
+    }
+
     return products.map(product => ({
         ...product,
         badge: "best-seller"
@@ -176,9 +201,14 @@ const getBestSellingProductsInternal = async (db) => {
 };
 
 const getBestSellingIds = async (db) => {
-    return await withCache("bestSellingIdsSet", 30, async () => {
-        const bestProducts = await getBestSellingProductsInternal(db);
-        return Array.from(new Set(bestProducts.map(p => (p._id ? p._id.toString() : ""))));
+    return await withCache("bestSellingIdsSet", 600, async () => {
+        try {
+            const bestProducts = await getBestSellingProductsInternal(db);
+            return Array.from(new Set(bestProducts.map(p => (p._id ? p._id.toString() : ""))));
+        } catch (e) {
+            console.error("Error fetching best selling IDs:", e.message);
+            return [];
+        }
     });
 };
 
@@ -188,8 +218,10 @@ const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const getCategoryIdentifiers = async (db, categoryInput) => {
     if (!categoryInput || !categoryInput.trim()) return [];
 
-    const categoriesCollection = db.collection("categories");
-    const allCategories = await categoriesCollection.find({}).toArray();
+    const allCategories = await withCache("allCategoriesRaw", 600, async () => {
+        const categoriesCollection = db.collection("categories");
+        return await categoriesCollection.find({}).toArray();
+    });
 
     const inputs = categoryInput.split(",").map(c => c.trim()).filter(Boolean);
     const matchedStrings = new Set();
@@ -320,7 +352,7 @@ const getAllProducts = async (req, res) => {
         }
 
         const cacheKey = `products_${page}_${limit}_${encodeURIComponent(search)}_${encodeURIComponent(category)}_${encodeURIComponent(brand)}_${sort}`;
-        const result = await withCache(cacheKey, 15, async () => {
+        const result = await withCache(cacheKey, 600, async () => {
             const bestSellingIds = await getBestSellingIds(db);
             const bestSellingIdsSet = new Set(bestSellingIds);
 
@@ -405,7 +437,9 @@ const getSingleProduct = async (req, res) => {
         const db = getDB();
         const productsCollection = db.collection("products");
 
-        const result = await productsCollection.findOne(buildIdQuery(id));
+        const result = await withCache(`product_${id}`, 600, async () => {
+            return await productsCollection.findOne(buildIdQuery(id));
+        });
 
         if (!result) {
             return res.status(404).send({ message: "Product not found" });
@@ -475,7 +509,7 @@ const deleteProduct = async (req, res) => {
 
 const getFlashSaleProducts = async (req, res) => {
     try {
-        const { products, maxStock } = await withCache("flashSaleProducts", 10, async () => {
+        const { products, maxStock } = await withCache("flashSaleProducts", 600, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 
@@ -546,7 +580,7 @@ const getFlashSaleProducts = async (req, res) => {
 
 const getBestSellingProducts = async (req, res) => {
     try {
-        const result = await withCache("bestSellingProducts", 15, async () => {
+        const result = await withCache("bestSellingProducts", 600, async () => {
             const db = getDB();
             return await getBestSellingProductsInternal(db);
         });
@@ -560,7 +594,7 @@ const getBestSellingProducts = async (req, res) => {
 
 const getNewArrivals = async (req, res) => {
     try {
-        const products = await withCache("newArrivals", 15, async () => {
+        const products = await withCache("newArrivals", 600, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 
@@ -598,7 +632,7 @@ const getNewArrivals = async (req, res) => {
 
 const getLatestReviews = async (req, res) => {
     try {
-        const reviews = await withCache("latestReviews", 15, async () => {
+        const reviews = await withCache("latestReviews", 600, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 
@@ -621,7 +655,7 @@ const getLatestReviews = async (req, res) => {
 
 const getFeaturedProducts = async (req, res) => {
     try {
-        const products = await withCache("featuredProducts", 15, async () => {
+        const products = await withCache("featuredProducts", 600, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 

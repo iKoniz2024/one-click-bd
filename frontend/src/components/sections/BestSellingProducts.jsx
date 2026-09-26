@@ -38,10 +38,11 @@ export default function BestSellingProducts({ initialData }) {
     queryKey: ["best-selling-products"],
     queryFn: getBestSellingProducts,
     initialData: (initialData?.products?.length > 0) ? initialData : undefined,
+    staleTime: 10 * 60 * 1000,
   });
 
   const bestSellingProducts = data?.products ?? [];
-  const showSkeleton = isLoading || (isFetching && bestSellingProducts.length === 0);
+  const showSkeleton = (isLoading || isFetching) && bestSellingProducts.length === 0;
 
   return (
     <section id="best-selling" className="bg-background pb-16 pt-6 sm:pb-20 sm:pt-8">

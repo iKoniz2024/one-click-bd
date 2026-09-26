@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ShoppingCart, Trophy, Sparkles, Star, Flame } from "lucide-react";
-import { getProducts, getBestSellingProducts, getNewArrivals } from "@/services/product.api";
+import { getProducts, getBestSellingProducts, getNewArrivals, getProductById } from "@/services/product.api";
+import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/utils/currency";
@@ -53,6 +54,7 @@ const badgeConfig = {
 
 function CompactProductCard({ product, index }) {
   const [showModal, setShowModal] = useState(false);
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
@@ -63,6 +65,16 @@ function CompactProductCard({ product, index }) {
   const isOutOfStock = product.stock === 0;
   const activeBadgeKey = product.badge;
   const activeBadgeInfo = activeBadgeKey ? badgeConfig[activeBadgeKey] : null;
+
+  const handlePrefetch = () => {
+    if (product?._id) {
+      queryClient.prefetchQuery({
+        queryKey: ["product", String(product._id)],
+        queryFn: () => getProductById(product._id),
+        staleTime: 10 * 60 * 1000,
+      });
+    }
+  };
 
   return (
     <>
@@ -82,7 +94,12 @@ function CompactProductCard({ product, index }) {
       >
         <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
           {/* Section 1: Fixed Consistent Image Section */}
-          <Link href={`/product/${product._id}`} className="relative block aspect-square h-40 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 border-b border-border/40 flex items-center justify-center">
+          <Link
+            href={`/product/${product._id}`}
+            className="relative block aspect-square h-40 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 border-b border-border/40 flex items-center justify-center"
+            onMouseEnter={handlePrefetch}
+            onTouchStart={handlePrefetch}
+          >
             {/* Badges */}
             {activeBadgeInfo && (
               <div className="absolute left-2 top-2 z-10">
@@ -211,6 +228,7 @@ export default function RelatedProducts({ currentProduct }) {
 
       return result.slice(0, 12);
     },
+    staleTime: 10 * 60 * 1000,
     enabled: !!currentProduct,
   });
 
