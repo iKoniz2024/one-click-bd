@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { motion } from "framer-motion";
 import { Trophy, Flame, Star, ShoppingCart } from "lucide-react";
@@ -61,10 +61,16 @@ const badgeConfig = {
 
 export default function ProductCard({ product, index, badge }) {
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { addToCart } = useAddToCart();
-  const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isAdmin = mounted && user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
     ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
@@ -72,6 +78,18 @@ export default function ProductCard({ product, index, badge }) {
   const isOutOfStock = product.stock === 0;
 
   const effectiveBadge = badge !== undefined ? badge : product.badge;
+
+  const hasVariants = (product?.sizes?.length > 0) || (product?.colors?.length > 0);
+
+  const handleAddToCartClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (hasVariants) {
+      setShowModal(true);
+    } else {
+      addToCart(product);
+    }
+  };
 
   const handlePrefetch = () => {
     if (product?._id) {
@@ -148,14 +166,12 @@ export default function ProductCard({ product, index, badge }) {
             </div>
 
             {/* Section 2: Compact Product Information Section */}
-            <div className="flex flex-col p-2 sm:p-3 gap-1">
-              {product.brand && (
-                <p className="hidden sm:block text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground line-clamp-1">
-                  {product.brand}
-                </p>
-              )}
+            <div className="flex flex-1 flex-col p-2 sm:p-3 gap-1">
+              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground truncate h-4 leading-4">
+                {product.brand || "\u00A0"}
+              </p>
 
-              <h3 className="line-clamp-2 text-xs font-semibold text-foreground sm:text-sm leading-tight">
+              <h3 className="line-clamp-2 text-xs font-semibold text-foreground sm:text-sm leading-tight h-8 sm:h-10 overflow-hidden">
                 {product.title}
               </h3>
 
@@ -195,19 +211,18 @@ export default function ProductCard({ product, index, badge }) {
               </div>
 
               {!isAdmin && (
-                <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
+                <div className="mt-auto pt-1 flex items-center gap-1.5 sm:gap-2">
                   <button
                     type="button"
                     disabled={isOutOfStock}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      addToCart(product);
-                    }}
-                    className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                    onClick={handleAddToCartClick}
+                    className="flex size-8 sm:h-9 sm:w-auto shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50 sm:px-2.5"
                     title="Add to Cart"
                   >
-                    <ShoppingCart className="size-3.5 sm:size-4" />
+                    <ShoppingCart className="size-3.5 sm:hidden" />
+                    <span className="hidden sm:inline text-xs font-bold whitespace-nowrap">
+                      Add to Cart
+                    </span>
                   </button>
                   <button
                     type="button"

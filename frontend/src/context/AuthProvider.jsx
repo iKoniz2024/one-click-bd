@@ -10,23 +10,23 @@ function useMountEffect(fn) {
 }
 
 export default function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("oneclick_auth_user");
-        return stored ? JSON.parse(stored) : null;
+        if (stored) {
+          setUser(JSON.parse(stored));
+        }
       } catch {
-        return null;
+        // ignore
+      } finally {
+        setLoading(false);
       }
     }
-    return null;
-  });
-  const [loading, setLoading] = useState(() => {
-    if (typeof window !== "undefined") {
-      return !localStorage.getItem("oneclick_auth_user");
-    }
-    return true;
-  });
+  }, []);
 
   const fetchUser = useCallback(async () => {
     try {

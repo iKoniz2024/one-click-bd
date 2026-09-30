@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -55,10 +55,16 @@ const badgeConfig = {
 
 function CompactProductCard({ product, index }) {
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { addToCart } = useAddToCart();
-  const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isAdmin = mounted && user?.role === "admin";
 
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
@@ -67,6 +73,18 @@ function CompactProductCard({ product, index }) {
   const isOutOfStock = product.stock === 0;
   const activeBadgeKey = product.badge;
   const activeBadgeInfo = activeBadgeKey ? badgeConfig[activeBadgeKey] : null;
+
+  const hasVariants = (product?.sizes?.length > 0) || (product?.colors?.length > 0);
+
+  const handleAddToCartClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (hasVariants) {
+      setShowModal(true);
+    } else {
+      addToCart(product);
+    }
+  };
 
   const handlePrefetch = () => {
     if (product?._id) {
@@ -151,19 +169,18 @@ function CompactProductCard({ product, index }) {
 
           {/* Bottom Action Buttons */}
           {!isAdmin && (
-            <div className="p-2 pt-0 flex items-center gap-1.5">
+            <div className="p-2 pt-0 mt-auto flex items-center gap-1.5">
               <button
                 type="button"
                 disabled={isOutOfStock}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  addToCart(product);
-                }}
-                className="flex size-8 shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                onClick={handleAddToCartClick}
+                className="flex size-8 sm:h-9 sm:w-auto shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50 sm:px-2.5"
                 title="Add to Cart"
               >
-                <ShoppingCart className="size-4" />
+                <ShoppingCart className="size-3.5 sm:hidden" />
+                <span className="hidden sm:inline text-xs font-bold whitespace-nowrap">
+                  Add to Cart
+                </span>
               </button>
               <button
                 type="button"

@@ -285,6 +285,7 @@ const getAllProducts = async (req, res) => {
         const limit = req.query.limit ? parseInt(req.query.limit) : null;
 
         const search = req.query.search || "";
+        const cleanSearch = search.trim();
         const category = req.query.category || "";
         const brand = req.query.brand || "";
         const sort = req.query.sort || "";
@@ -310,29 +311,10 @@ const getAllProducts = async (req, res) => {
             }
         }
 
-        // 2. Resolve Search Query Filtering
-        if (search && search.trim()) {
-            const cleanSearch = search.trim();
+        // 2. Resolve Search Query Filtering (Strict Title Match Only)
+        if (cleanSearch) {
             const searchRegex = new RegExp(escapeRegex(cleanSearch), "i");
-
-            // Also check if search query matches any category hierarchy
-            const categorySearchIdentifiers = await getCategoryIdentifiers(db, cleanSearch);
-            const searchCatRegexes = categorySearchIdentifiers.map(str => new RegExp(`^${escapeRegex(str)}$`, 'i'));
-
-            const searchOrConditions = [
-                { title: searchRegex },
-                { description: searchRegex },
-                { brand: searchRegex },
-                { tags: searchRegex },
-                { category: searchRegex },
-                { sku: searchRegex }
-            ];
-
-            if (searchCatRegexes.length > 0) {
-                searchOrConditions.push({ category: { $in: searchCatRegexes } });
-            }
-
-            queryConditions.push({ $or: searchOrConditions });
+            queryConditions.push({ title: searchRegex });
         }
 
         // 3. Resolve Brand Filtering
@@ -353,15 +335,27 @@ const getAllProducts = async (req, res) => {
             sortOption = { price: -1 };
         }
 
-        const cacheKey = `products_${page}_${limit}_${encodeURIComponent(search)}_${encodeURIComponent(category)}_${encodeURIComponent(brand)}_${sort}`;
+        const cacheKey = `products_${page}_${limit}_${encodeURIComponent(cleanSearch)}_${encodeURIComponent(category)}_${encodeURIComponent(brand)}_${sort}_strict_title`;
         const result = await withCache(cacheKey, 600, async () => {
             const bestSellingIds = await getBestSellingIds(db);
             const bestSellingIdsSet = new Set(bestSellingIds);
 
-            const formatProducts = (prods) => prods.map(p => ({
-                ...p,
-                badge: p.badge || (bestSellingIdsSet.has(p._id ? p._id.toString() : "") ? "best-seller" : null)
-            }));
+            const formatProducts = (prods) => {
+                let formatted = prods.map(p => ({
+                    ...p,
+                    badge: p.badge || (bestSellingIdsSet.has(p._id ? p._id.toString() : "") ? "best-seller" : null)
+                }));
+
+                if (cleanSearch) {
+                    const lowerSearch = cleanSearch.toLowerCase();
+                    formatted.sort((a, b) => {
+                        const aTitleStarts = a.title?.toLowerCase().startsWith(lowerSearch) ? 1 : 0;
+                        const bTitleStarts = b.title?.toLowerCase().startsWith(lowerSearch) ? 1 : 0;
+                        return bTitleStarts - aTitleStarts;
+                    });
+                }
+                return formatted;
+            };
 
             if (page && limit) {
                 const skip = (page - 1) * limit;

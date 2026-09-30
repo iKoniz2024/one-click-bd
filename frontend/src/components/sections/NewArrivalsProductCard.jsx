@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
@@ -14,15 +14,33 @@ import { useAddToCart } from "@/hooks/useAddToCart";
 
 export default function NewArrivalsProductCard({ product, index }) {
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { addToCart } = useAddToCart();
-  const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isAdmin = mounted && user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
     ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
     : null;
   const isOutOfStock = product.stock === 0;
+
+  const hasVariants = (product?.sizes?.length > 0) || (product?.colors?.length > 0);
+
+  const handleAddToCartClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (hasVariants) {
+      setShowModal(true);
+    } else {
+      addToCart(product);
+    }
+  };
 
   const handlePrefetch = () => {
     if (product?._id) {
@@ -81,8 +99,12 @@ export default function NewArrivalsProductCard({ product, index }) {
             </div>
           </Link>
 
-          <div className="flex flex-col px-2 py-1.5 gap-0.5">
-            <h4 className="line-clamp-1 text-xs font-semibold text-foreground leading-tight">
+          <div className="flex flex-1 flex-col p-2 sm:p-2.5 gap-1">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground truncate h-3.5 leading-3.5">
+              {product.brand || "\u00A0"}
+            </p>
+
+            <h4 className="line-clamp-2 text-xs font-semibold text-foreground leading-tight h-8 sm:h-9 overflow-hidden">
               {product.title}
             </h4>
 
@@ -120,15 +142,11 @@ export default function NewArrivalsProductCard({ product, index }) {
             </div>
 
             {!isAdmin && (
-              <div className="mt-1 flex items-center gap-1.5">
+              <div className="mt-auto pt-1 flex items-center gap-1.5">
                 <button
                   type="button"
                   disabled={isOutOfStock}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    addToCart(product);
-                  }}
+                  onClick={handleAddToCartClick}
                   className="flex size-7.5 sm:size-8 shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
                   title="Add to Cart"
                 >
