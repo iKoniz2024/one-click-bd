@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { ArrowLeft, Save, Trash2, Camera, X, Package, Tag, Sliders, ImagePlus, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Camera, X, Package, Tag, Sliders, ImagePlus, Plus, Sparkles, Video, Eye } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import { getProductById, updateProduct, deleteProduct } from "@/services/product.api";
@@ -90,6 +90,7 @@ const updateSchema = z.object({
   tags: z.string().optional(),
   brand: z.string().optional(),
   weight: z.coerce.number().optional(),
+  videoUrl: z.string().optional(),
   warrantyInformation: z.string().optional(),
   shippingInformation: z.string().optional(),
   returnPolicy: z.string().optional(),
@@ -131,6 +132,7 @@ export default function AdminProductDetails({ children }) {
   const [colorPreview, setColorPreview] = useState("");
   const colorInputRef = useRef(null);
   const [dynamicAttributes, setDynamicAttributes] = useState({});
+  const [videoUrlInput, setVideoUrlInput] = useState("");
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["admin-product", id],
@@ -166,6 +168,7 @@ export default function AdminProductDetails({ children }) {
         tags: product.tags?.join(", ") ?? "",
         brand: product.brand ?? "",
         weight: product.weight ?? "",
+        videoUrl: product.videoUrl ?? "",
         warrantyInformation: product.warrantyInformation ?? "",
         shippingInformation: product.shippingInformation ?? "",
         returnPolicy: product.returnPolicy ?? "",
@@ -188,6 +191,7 @@ export default function AdminProductDetails({ children }) {
     setColorVariants(product.colors ?? []);
     setExistingImages(product.images ?? []);
     setDynamicAttributes(product.attributes ?? {});
+    setVideoUrlInput(product.videoUrl ?? "");
     if (product.sizeMeasurements) {
       const initialMeasurements = {};
       product.sizeMeasurements.forEach(m => {
@@ -210,6 +214,7 @@ export default function AdminProductDetails({ children }) {
       tags: product.tags?.join(", ") ?? "",
       brand: product.brand ?? "",
       weight: product.weight ?? "",
+      videoUrl: product.videoUrl ?? "",
       warrantyInformation: product.warrantyInformation ?? "",
       shippingInformation: product.shippingInformation ?? "",
       returnPolicy: product.returnPolicy ?? "",
@@ -236,6 +241,8 @@ export default function AdminProductDetails({ children }) {
       });
       queryClient.invalidateQueries({ queryKey: ["admin-product", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
     onError: (err) => {
       const data = err?.response?.data;
@@ -361,6 +368,7 @@ export default function AdminProductDetails({ children }) {
       stock: formData.stock,
       brand: formData.brand,
       weight: formData.weight || undefined,
+      videoUrl: videoUrlInput.trim(),
       warrantyInformation: formData.warrantyInformation,
       shippingInformation: formData.shippingInformation,
       returnPolicy: formData.returnPolicy,
@@ -444,6 +452,15 @@ export default function AdminProductDetails({ children }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href={`/product/${id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted shadow-xs"
+            >
+              <Eye className="size-3.5 text-primary" />
+              View Live Product
+            </a>
             {!showDeleteConfirm ? (
               <Button
                 variant="ghost"
@@ -908,6 +925,19 @@ export default function AdminProductDetails({ children }) {
             <div className="flex items-center gap-2 border-b border-border/60 pb-3 text-sm font-bold text-foreground">
               <ImagePlus className="size-4 text-primary" />
               <span>Product Media</span>
+            </div>
+
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <Video className="size-3.5 text-primary" />
+                Product Video Link <span className="font-normal text-muted-foreground">(Google Drive / YouTube / MP4 Link)</span>
+              </label>
+              <Input
+                value={videoUrlInput}
+                onChange={(e) => setVideoUrlInput(e.target.value)}
+                placeholder="e.g. https://drive.google.com/file/d/1A2B3C.../view?usp=sharing"
+                className="text-xs"
+              />
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">

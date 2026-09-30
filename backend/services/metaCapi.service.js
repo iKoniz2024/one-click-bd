@@ -108,7 +108,9 @@ const sendPurchaseEvent = async (order, req) => {
             },
             custom_data: {
               currency: "BDT",
-              value: Number(order.totalPrice || order.subtotal || 0),
+              value: (Number(order.totalPrice || order.subtotal || 0) > 0)
+                ? Number(Number(order.totalPrice || order.subtotal).toFixed(2))
+                : 0.01,
               content_type: "product",
               contents: contents,
               num_items: contents.reduce((acc, curr) => acc + curr.quantity, 0),

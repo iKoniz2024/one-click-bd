@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { usePathname } from 'next/navigation';
 import useSettings from "@/hooks/useSettings";
-import { LayoutDashboard, ShoppingBag, Tags, Image as ImageIcon, ShoppingCart, Settings, User, Home } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Tags, Image as ImageIcon, ShoppingCart, Settings, User, Home, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getProducts } from "@/services/product.api";
 import { getCategories } from "@/services/category.api";
@@ -91,7 +91,16 @@ export default function Sidebar({ open, onClose }) {
         className={`fixed inset-y-0 left-0 z-50 w-64 border-r bg-card p-5 transition-transform duration-200 lg:static lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"
           }`}
       >
-        <img src={logo} alt={siteName} className="mb-6 h-16 w-auto dark:invert" />
+        <div className="mb-6 flex items-center justify-between">
+          <img src={logo} alt={siteName} className="h-14 w-auto dark:invert" />
+          <button
+            onClick={onClose}
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+            title="Close menu"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
 
         <nav className="space-y-1">
           {menuItems.map((item) => {

@@ -16,6 +16,9 @@ import {
   Home,
   ShoppingCart,
   ChevronDown,
+  Play,
+  Video,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getProductById } from "@/services/product.api";
@@ -51,6 +54,37 @@ function ProductSkeleton() {
 import usePageTitle from "@/hooks/usePageTitle";
 import { trackMetaPixelEvent } from "@/utils/metaPixel";
 
+const getEmbedVideoUrl = (url) => {
+  if (!url) return null;
+  const trimmed = url.trim();
+
+  // Google Drive
+  const driveMatch = trimmed.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|drive\.google\.com\/uc\?id=)([a-zA-Z0-9_-]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return { type: "iframe", src: `https://drive.google.com/file/d/${driveMatch[1]}/preview` };
+  }
+
+  // YouTube
+  const ytMatch = trimmed.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  if (ytMatch && ytMatch[1]) {
+    return { type: "iframe", src: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1` };
+  }
+
+  // Direct video (mp4, webm, etc.)
+  if (trimmed.match(/\.(mp4|webm|ogg)$/i) || trimmed.startsWith("data:video/")) {
+    return { type: "video", src: trimmed };
+  }
+
+  // Fallback iframe
+  return { type: "iframe", src: trimmed };
+};
+
+const YouTubeIcon = ({ className = "size-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+);
+
 export default function ProductDetails({ id: propId, initialData }) {
   const { siteName } = useSettings();
   const routeParams = useParams();
@@ -59,10 +93,17 @@ export default function ProductDetails({ id: propId, initialData }) {
   const { addToCart } = useAddToCart();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [activeDisplayImage, setActiveDisplayImage] = useState(null);
+  const [isVideoActive, setIsVideoActive] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50, show: false });
@@ -82,7 +123,7 @@ export default function ProductDetails({ id: propId, initialData }) {
     queryKey: ["product", id],
     queryFn: () => getProductById(id),
     initialData: initialData || undefined,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 1000,
     enabled: !!id,
   });
 
@@ -177,6 +218,7 @@ export default function ProductDetails({ id: propId, initialData }) {
     );
   }
 
+  const embedVideo = useMemo(() => getEmbedVideoUrl(product?.videoUrl), [product?.videoUrl]);
   const mainDisplayImage = activeDisplayImage || allImages[selectedImage] || product.thumbnail;
 
   return (
@@ -202,46 +244,112 @@ export default function ProductDetails({ id: propId, initialData }) {
 
       <div className="container mx-auto px-4 py-6 lg:py-10">
         <div className="flex flex-col gap-6 lg:flex-row">
-          {/* Left - Images lg:w-[35%] */}
+          {/* Left - Images & Media lg:w-[35%] */}
           <div className="flex flex-col gap-3 lg:w-[35%]">
-            <div
-              className="relative overflow-hidden rounded-xl border border-border bg-muted/30 flex items-center justify-center cursor-zoom-in select-none"
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-            >
-              <img
-                src={mainDisplayImage}
-                alt={product.title}
-                className="aspect-square max-h-[380px] sm:max-h-[440px] lg:max-h-[460px] w-full object-contain p-2 transition-transform duration-150 ease-out"
-                style={{
-                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                  transform: zoomPos.show ? "scale(2.4)" : "scale(1)",
-                }}
-                loading="eager"
-                fetchPriority="high"
-              />
-              {hasDiscount && (
-                <div className="absolute left-3 top-3 z-10 pointer-events-none">
-                  <Badge className="bg-secondary text-secondary-foreground text-xs font-semibold shadow-sm">
-                    -{Math.round(product.discountPercentage)}%
-                  </Badge>
-                </div>
-              )}
-            </div>
+            {isVideoActive && embedVideo ? (
+              <div className="relative aspect-square max-h-[380px] sm:max-h-[440px] lg:max-h-[460px] w-full overflow-hidden rounded-xl border border-border bg-black">
+                {embedVideo.type === "iframe" ? (
+                  <iframe
+                    src={embedVideo.src}
+                    title={`${product.title} Video`}
+                    className="h-full w-full border-0 rounded-xl"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                ) : (
+                  <video
+                    src={embedVideo.src}
+                    controls
+                    autoPlay
+                    className="h-full w-full object-contain rounded-xl"
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsVideoActive(false)}
+                  className="absolute right-3 top-3 z-20 rounded-full bg-black/70 p-1.5 text-white hover:bg-black transition-colors"
+                  title="Switch to Photo View"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                className="relative overflow-hidden rounded-xl border border-border bg-muted/30 flex items-center justify-center cursor-zoom-in select-none"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+              >
+                <img
+                  src={mainDisplayImage}
+                  alt={product.title}
+                  className="aspect-square max-h-[380px] sm:max-h-[440px] lg:max-h-[460px] w-full object-contain p-2 transition-transform duration-150 ease-out"
+                  style={{
+                    transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                    transform: zoomPos.show ? "scale(2.4)" : "scale(1)",
+                  }}
+                  loading="eager"
+                  fetchPriority="high"
+                />
+                {hasDiscount && (
+                  <div className="absolute left-3 top-3 z-10 pointer-events-none">
+                    <Badge className="bg-secondary text-secondary-foreground text-xs font-semibold shadow-sm">
+                      -{Math.round(product.discountPercentage)}%
+                    </Badge>
+                  </div>
+                )}
+                {embedVideo && (
+                  <button
+                    type="button"
+                    onClick={() => setIsVideoActive(true)}
+                    className="absolute bottom-3 right-3 z-10 flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-red-600/30 ring-2 ring-red-500/50 transition-all hover:scale-105 hover:bg-red-700 active:scale-95"
+                  >
+                    <YouTubeIcon className="size-4 text-white" />
+                    <span>Watch Now</span>
+                  </button>
+                )}
+              </div>
+            )}
 
-            {allImages.length > 1 && (
+            {(allImages.length > 1 || embedVideo) && (
               <div className="flex gap-2 overflow-x-auto pb-1">
+                {embedVideo && (
+                  <button
+                    type="button"
+                    onClick={() => setIsVideoActive(true)}
+                    className={`relative size-16 shrink-0 overflow-hidden rounded-xl border transition-all sm:size-20 shadow-xs group bg-black ${
+                      isVideoActive
+                        ? "border-red-600 ring-2 ring-red-600/80 scale-[1.03]"
+                        : "border-border hover:border-red-500/50 hover:scale-[1.02]"
+                    }`}
+                  >
+                    <img
+                      src={product.thumbnail}
+                      alt="Product Video"
+                      className="h-full w-full object-cover opacity-60 transition-transform duration-300 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center p-1 backdrop-blur-[0.5px]">
+                      <div className="flex items-center justify-center rounded-xl bg-red-600 px-2.5 py-1.5 text-white shadow-lg transition-transform duration-200 group-hover:scale-110">
+                        <YouTubeIcon className="size-5 sm:size-6" />
+                      </div>
+                    </div>
+                  </button>
+                )}
+
                 {allImages.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => {
+                      setIsVideoActive(false);
                       setSelectedImage(i);
                       setActiveDisplayImage(img);
                     }}
-                    className={`size-16 shrink-0 overflow-hidden rounded-lg border transition-colors bg-muted/20 sm:size-20 ${img === mainDisplayImage
-                      ? "border-foreground ring-1 ring-foreground"
-                      : "border-border hover:border-muted-foreground/50"
-                      }`}
+                    className={`size-16 shrink-0 overflow-hidden rounded-lg border transition-colors bg-muted/20 sm:size-20 ${
+                      !isVideoActive && img === mainDisplayImage
+                        ? "border-foreground ring-1 ring-foreground"
+                        : "border-border hover:border-muted-foreground/50"
+                    }`}
                   >
                     <img
                       src={img}
@@ -376,7 +484,7 @@ export default function ProductDetails({ id: propId, initialData }) {
                   </button>
                 </div>
 
-                {!isAdmin && (
+                {(!mounted || !isAdmin) && (
                   <Button
                     size="lg"
                     className="flex-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-base font-bold"
@@ -509,20 +617,20 @@ export default function ProductDetails({ id: propId, initialData }) {
                   </div>
                 </div>
               );
-            })() : (
+            })() : product?.sizeChart ? (
               <div className="mt-2 overflow-hidden rounded border border-border">
                 <div className="bg-muted py-2 text-center text-sm font-bold text-foreground">
                   Size Measurement
                 </div>
                 <div className="p-2">
                   <img
-                    src={product.sizeChart || "https://placehold.co/400x300/e2e8f0/1e293b?text=Size+Chart"}
+                    src={product.sizeChart}
                     alt="Size Measurement"
                     className="w-full h-auto object-contain"
                   />
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 

@@ -143,49 +143,51 @@ const Navbar = () => {
                             )}
                         </Link>
 
-                        {user ? (
-                            <div className="relative hidden sm:block group/profile">
-                                <button
-                                    className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90 shadow-sm"
-                                >
-                                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                                </button>
-                                <div className="invisible opacity-0 group-hover/profile:visible group-hover/profile:opacity-100 transition-all duration-200 absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-background py-2 shadow-xl">
-                                    <div className="px-4 py-2 border-b border-border">
-                                        <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
-                                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                                    </div>
-                                    <Link
-                                        href="/dashboard"
-                                        className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                                    >
-                                        Dashboard
-                                    </Link>
-                                    <Link
-                                        href="/dashboard/profile"
-                                        className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                                    >
-                                        Profile
-                                    </Link>
+                        {mounted ? (
+                            user ? (
+                                <div className="relative hidden sm:block group/profile">
                                     <button
-                                        onClick={async () => {
-                                            await logout();
-                                            router.push("/");
-                                        }}
-                                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                                        className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90 shadow-sm"
                                     >
-                                        Logout
+                                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
                                     </button>
+                                    <div className="invisible opacity-0 group-hover/profile:visible group-hover/profile:opacity-100 transition-all duration-200 absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-background py-2 shadow-xl">
+                                        <div className="px-4 py-2 border-b border-border">
+                                            <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                                        </div>
+                                        <Link
+                                            href="/dashboard"
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                                        >
+                                            Dashboard
+                                        </Link>
+                                        <Link
+                                            href="/dashboard/profile"
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                                        >
+                                            Profile
+                                        </Link>
+                                        <button
+                                            onClick={async () => {
+                                                await logout();
+                                                router.push("/");
+                                            }}
+                                            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <Link
-                                href="/login"
-                                className="hidden sm:inline-block rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                            >
-                                Admin
-                            </Link>
-                        )}
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="hidden sm:inline-block rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                >
+                                    Admin
+                                </Link>
+                            )
+                        ) : null}
                     </div>
                 </div>
 
@@ -415,46 +417,48 @@ const Navbar = () => {
                                 <ShoppingCart className="size-4" />
                                 Cart {cartCount > 0 && `(${cartCount})`}
                             </Link>
-                            {user ? (
-                                <>
-                                    <div className="rounded-lg bg-muted/50 px-4 py-3">
-                                        <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
-                                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                                    </div>
+                            {mounted ? (
+                                user ? (
+                                    <>
+                                        <div className="rounded-lg bg-muted/50 px-4 py-3">
+                                            <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                                        </div>
+                                        <Link
+                                            href="/dashboard"
+                                            onClick={() => setMobileOpen(false)}
+                                            className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                        >
+                                            Dashboard
+                                        </Link>
+                                        <Link
+                                            href="/dashboard/profile"
+                                            onClick={() => setMobileOpen(false)}
+                                            className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                        >
+                                            Profile
+                                        </Link>
+                                        <button
+                                            onClick={async () => {
+                                                await logout();
+                                                setMobileOpen(false);
+                                                router.push("/");
+                                            }}
+                                            className="block w-full rounded-lg border border-red-200 px-4 py-2.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/10"
+                                        >
+                                            Logout
+                                        </button>
+                                    </>
+                                ) : (
                                     <Link
-                                        href="/dashboard"
+                                        href="/login"
                                         onClick={() => setMobileOpen(false)}
                                         className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
                                     >
-                                        Dashboard
+                                        Admin Login
                                     </Link>
-                                    <Link
-                                        href="/dashboard/profile"
-                                        onClick={() => setMobileOpen(false)}
-                                        className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                                    >
-                                        Profile
-                                    </Link>
-                                    <button
-                                        onClick={async () => {
-                                            await logout();
-                                            setMobileOpen(false);
-                                            router.push("/");
-                                        }}
-                                        className="block w-full rounded-lg border border-red-200 px-4 py-2.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/10"
-                                    >
-                                        Logout
-                                    </button>
-                                </>
-                            ) : (
-                                <Link
-                                    href="/login"
-                                    onClick={() => setMobileOpen(false)}
-                                    className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                                >
-                                    Admin Login
-                                </Link>
-                            )}
+                                )
+                            ) : null}
                         </div>
                     </div>
                 </div>
@@ -511,7 +515,7 @@ const Navbar = () => {
                     </Link>
 
                     <Link
-                        href={user ? "/dashboard" : "/login"}
+                        href={mounted && user ? "/dashboard" : "/login"}
                         className={`flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${
                             pathname.startsWith("/dashboard") || pathname === "/login"
                                 ? "text-primary font-bold"

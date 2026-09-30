@@ -99,8 +99,9 @@ export default function Checkout({ children }) {
 
   useEffect(() => {
     if (items.length > 0) {
+      const initVal = Number(total) > 0 ? Number(Number(total).toFixed(2)) : 0.01;
       trackMetaPixelEvent("InitiateCheckout", {
-        value: Number(Number(total || 0).toFixed(2)),
+        value: initVal,
         currency: "BDT",
         content_type: "product",
         content_ids: items.map((i) => String(i.productId || "")),
@@ -114,9 +115,11 @@ export default function Checkout({ children }) {
     onSuccess: (data) => {
       toast.success("Order placed successfully!");
 
+      const purchaseValue = Number(total) > 0 ? Number(Number(total).toFixed(2)) : 0.01;
+
       // Client-side Purchase event
       trackMetaPixelEvent("Purchase", {
-        value: Number(Number(total || 0).toFixed(2)),
+        value: purchaseValue,
         currency: "BDT",
         content_type: "product",
         content_ids: items.map((i) => String(i.productId || "")),

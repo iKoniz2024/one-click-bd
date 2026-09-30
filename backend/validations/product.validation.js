@@ -33,7 +33,8 @@ const createProductSchema = z.object({
     })).optional().default([]),
 
     images: z.array(z.string()).optional().default([]),
-    thumbnail: z.string().optional().default("")
+    thumbnail: z.string().optional().default(""),
+    videoUrl: z.string().optional().default("")
 });
 
 
@@ -70,7 +71,8 @@ const updateProductSchema = z.object({
     })).optional(),
 
     images: z.array(z.string()).optional(),
-    thumbnail: z.string().optional()
+    thumbnail: z.string().optional(),
+    videoUrl: z.string().optional()
 });
 
 module.exports = {

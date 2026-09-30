@@ -2,13 +2,13 @@ import { cache } from "react";
 import ProductDetails from "@/views/Products/ProductDetails";
 import { getApiUrl } from "@/utils/getApiUrl";
 
-export const revalidate = 600; // Cache for 600 seconds
+export const revalidate = 0; // Fresh product data on every request
 
 const getProduct = cache(async (id) => {
   try {
     const baseUrl = getApiUrl();
     const res = await fetch(`${baseUrl}/products/${id}`, {
-      next: { revalidate: 600 },
+      cache: "no-store",
       headers: { Connection: "close" },
       signal: AbortSignal.timeout(15000),
     });

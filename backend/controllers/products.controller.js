@@ -27,7 +27,8 @@ const createProduct = async (req, res) => {
             sizeMeasurements,
             colors,
             images,
-            thumbnail
+            thumbnail,
+            videoUrl
         } = req.body;
 
         const normalizedPrice = Number(price ?? 0);
@@ -77,11 +78,12 @@ const createProduct = async (req, res) => {
             },
 
             images,
-            thumbnail
+            thumbnail,
+            videoUrl: videoUrl || ""
         };
 
         const result = await productsCollection.insertOne(newProduct);
-        clearCache("products");
+        clearCache();
 
         res.status(201).send({
             message: "Product created successfully",
@@ -468,6 +470,8 @@ const updateProduct = async (req, res) => {
             "meta.updatedAt": new Date()
         };
 
+        delete updatedFields._id;
+
         const result = await productsCollection.updateOne(
             buildIdQuery(id),
             { $set: updatedFields }
@@ -477,7 +481,7 @@ const updateProduct = async (req, res) => {
             return res.status(404).send({ message: "Product not found" });
         }
 
-        clearCache("products");
+        clearCache();
         res.send({ message: "Product updated successfully" });
 
     } catch (error) {
@@ -498,7 +502,7 @@ const deleteProduct = async (req, res) => {
             return res.status(404).send({ message: "Product not found" });
         }
 
-        clearCache("products");
+        clearCache();
         res.send({ message: "Product deleted successfully" });
 
     } catch (error) {

@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Plus, Eye, Trash2, X, Package, Camera, ImagePlus, Search, ChevronLeft, ChevronRight, Tag, Sliders, Layers, Sparkles, ShieldCheck } from "lucide-react";
+import { Plus, Eye, Trash2, X, Package, Camera, ImagePlus, Search, ChevronLeft, ChevronRight, Tag, Sliders, Layers, Sparkles, ShieldCheck, Video } from "lucide-react";
 
 import { getProducts, createProduct, deleteProduct } from "@/services/product.api";
 import { formatBDT } from "@/utils/currency";
@@ -78,6 +78,7 @@ const productSchema = z.object({
   stock: z.coerce.number().min(0, "Stock cannot be negative"),
   brand: z.string().optional().default(""),
   tags: z.string().optional().default(""),
+  videoUrl: z.string().optional().default(""),
   warrantyInformation: z.string().optional().default(""),
   shippingInformation: z.string().optional().default(""),
   returnPolicy: z.string().optional().default(""),
@@ -136,6 +137,7 @@ export default function AdminProducts({ children }) {
   const [colorFile, setColorFile] = useState(null);
   const [colorPreview, setColorPreview] = useState("");
   const colorInputRef = useRef(null);
+  const [videoUrlInput, setVideoUrlInput] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -378,6 +380,7 @@ export default function AdminProducts({ children }) {
         return measurementObj;
       }),
       colors: processedColors,
+      videoUrl: videoUrlInput.trim(),
       thumbnail,
       images,
     };
@@ -899,6 +902,19 @@ export default function AdminProducts({ children }) {
                   <div className="flex items-center gap-2 border-b border-border/60 pb-3 text-sm font-bold text-foreground">
                     <ImagePlus className="size-4 text-primary" />
                     <span>Product Media</span>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                      <Video className="size-3.5 text-primary" />
+                      Product Video Link <span className="font-normal text-muted-foreground">(Google Drive / YouTube / MP4 Link)</span>
+                    </label>
+                    <Input
+                      value={videoUrlInput}
+                      onChange={(e) => setVideoUrlInput(e.target.value)}
+                      placeholder="e.g. https://drive.google.com/file/d/1A2B3C.../view?usp=sharing"
+                      className="text-xs"
+                    />
                   </div>
 
                   <div className="grid gap-6 sm:grid-cols-2">

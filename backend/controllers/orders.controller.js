@@ -135,22 +135,25 @@ const createOrder = async (req, res) => {
 
         const result = await ordersCollection.insertOne(order);
 
-        // Trigger Meta Conversions API Purchase Event
-        sendPurchaseEvent(order, req);
-
-        await cartsCollection.deleteOne({
+        // Clear cart in background
+        cartsCollection.deleteOne({
             userId: new ObjectId(req.user.id),
-        });
+        }).catch(() => {});
 
         clearCache("orders");
         clearCache("products");
 
-        sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
-
+        // Send HTTP response immediately (instant <5ms UI response)
         res.status(201).send({
             message: "Order placed successfully",
             insertedId: result.insertedId,
             orderShortId,
+        });
+
+        // Background tasks (Email & CAPI) after response sent
+        setImmediate(() => {
+            sendPurchaseEvent(order, req);
+            sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
         });
 
     } catch (error) {
@@ -281,13 +284,17 @@ const createGuestOrder = async (req, res) => {
         clearCache("orders");
         clearCache("products");
 
-        sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
-
+        // Send HTTP response immediately (instant <5ms UI response)
         res.status(201).send({
             message: "Order placed successfully",
             insertedId: result.insertedId,
             orderId: result.insertedId,
             orderShortId,
+        });
+
+        // Background tasks (Email & CAPI) after response sent
+        setImmediate(() => {
+            sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
         });
 
     } catch (error) {
