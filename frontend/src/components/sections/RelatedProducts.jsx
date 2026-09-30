@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useAddToCart } from "@/hooks/useAddToCart";
 
 function RelatedProductsSkeleton() {
   return (
@@ -56,6 +57,7 @@ function CompactProductCard({ product, index }) {
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { addToCart } = useAddToCart();
   const isAdmin = user?.role === "admin";
 
   const hasDiscount = product.discountPercentage > 0;
@@ -96,7 +98,7 @@ function CompactProductCard({ product, index }) {
           {/* Section 1: Fixed Consistent Image Section */}
           <Link
             href={`/product/${product._id}`}
-            className="relative block aspect-square h-40 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 border-b border-border/40 flex items-center justify-center"
+            className="relative block aspect-square h-34 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 border-b border-border/40 flex items-center justify-center"
             onMouseEnter={handlePrefetch}
             onTouchStart={handlePrefetch}
           >
@@ -147,16 +149,35 @@ function CompactProductCard({ product, index }) {
             )}
           </Link>
 
-          {/* Bottom Order Button */}
+          {/* Bottom Action Buttons */}
           {!isAdmin && (
-            <button
-              disabled={isOutOfStock}
-              onClick={() => setShowModal(true)}
-              className="w-full flex items-center justify-center gap-1.5 bg-foreground py-2 text-xs sm:text-sm font-bold text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
-            >
-              <ShoppingCart className="size-3.5" />
-              <span>{isOutOfStock ? "Unavailable" : "অর্ডার করুন"}</span>
-            </button>
+            <div className="p-2 pt-0 flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={isOutOfStock}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  addToCart(product);
+                }}
+                className="flex size-8 shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                title="Add to Cart"
+              >
+                <ShoppingCart className="size-4" />
+              </button>
+              <button
+                type="button"
+                disabled={isOutOfStock}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowModal(true);
+                }}
+                className="flex-1 rounded-lg bg-primary py-2 text-xs sm:text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 text-center whitespace-nowrap shadow-sm"
+              >
+                {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
+              </button>
+            </div>
           )}
         </div>
       </motion.div>

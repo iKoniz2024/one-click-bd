@@ -4,16 +4,19 @@ import Link from 'next/link';
 import { useState } from "react";
 
 import { motion } from "framer-motion";
+import { ShoppingCart } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getProductById } from "@/services/product.api";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useAddToCart } from "@/hooks/useAddToCart";
 
 export default function NewArrivalsProductCard({ product, index }) {
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { addToCart } = useAddToCart();
   const isAdmin = user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
@@ -56,11 +59,11 @@ export default function NewArrivalsProductCard({ product, index }) {
             onTouchStart={handlePrefetch}
           >
             {/* Section 1: Fixed Consistent Image Section */}
-            <div className="relative aspect-square h-40 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 flex items-center justify-center border-b border-border/40">
+            <div className="relative h-32 sm:h-40 w-full shrink-0 overflow-hidden bg-muted/30 flex items-center justify-center border-b border-border/40">
               <img
                 src={product.thumbnail || product.images?.[0] || null}
                 alt={product.title}
-                className="h-full w-full object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-110 sm:group-hover:scale-115"
+                className="h-full w-full object-contain p-1.5 transition-transform duration-300 ease-out group-hover:scale-110 sm:group-hover:scale-115"
                 loading="lazy"
               />
               {hasDiscount && (
@@ -78,33 +81,74 @@ export default function NewArrivalsProductCard({ product, index }) {
             </div>
           </Link>
 
-          <div className="flex flex-1 flex-col justify-between p-2.5">
-            <h4 className="line-clamp-1 text-xs font-medium text-foreground">
+          <div className="flex flex-col px-2 py-1.5 gap-0.5">
+            <h4 className="line-clamp-1 text-xs font-semibold text-foreground leading-tight">
               {product.title}
             </h4>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-xs sm:text-sm font-bold text-foreground">
-                {formatBDT(hasDiscount ? discountedPrice : product.price)}
-              </span>
-              {hasDiscount && (
-                <span className="text-[10px] text-muted-foreground line-through">
-                  {formatBDT(product.price)}
-                </span>
-              )}
-            </div>
-          </div>
 
-          {!isAdmin && (
-            <div className="p-2 pt-0">
-              <button
-                disabled={isOutOfStock}
-                onClick={() => setShowModal(true)}
-                className="w-full rounded bg-primary py-1.5 text-[11px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-              >
-                {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
-              </button>
+            <div className="mt-0.5">
+              {/* Desktop Layout */}
+              <div className="hidden sm:flex items-baseline gap-1">
+                <span className="text-xs sm:text-sm font-bold text-foreground">
+                  {formatBDT(hasDiscount ? discountedPrice : product.price)}
+                </span>
+                {hasDiscount && (
+                  <span className="text-[10px] text-muted-foreground line-through">
+                    {formatBDT(product.price)}
+                  </span>
+                )}
+              </div>
+
+              {/* Mobile Layout (Price Div on left stacked if discount, Stock Div on right) */}
+              <div className="flex sm:hidden items-center justify-between gap-1">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground leading-tight">
+                    {formatBDT(hasDiscount ? discountedPrice : product.price)}
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-[10px] text-muted-foreground line-through leading-tight">
+                      {formatBDT(product.price)}
+                    </span>
+                  )}
+                </div>
+                {product.stock > 0 && (
+                  <span className={`text-[10px] shrink-0 whitespace-nowrap ${product.stock <= 5 ? "font-medium text-destructive" : "text-muted-foreground"}`}>
+                    {product.stock <= 5 ? `${product.stock} left` : `${product.stock} in stock`}
+                  </span>
+                )}
+              </div>
             </div>
-          )}
+
+            {!isAdmin && (
+              <div className="mt-1 flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={isOutOfStock}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addToCart(product);
+                  }}
+                  className="flex size-7.5 sm:size-8 shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                  title="Add to Cart"
+                >
+                  <ShoppingCart className="size-3.5 sm:size-4" />
+                </button>
+                <button
+                  type="button"
+                  disabled={isOutOfStock}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowModal(true);
+                  }}
+                  className="flex-1 rounded-lg bg-primary py-1.5 text-[11px] sm:text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 text-center whitespace-nowrap px-1"
+                >
+                  {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
 

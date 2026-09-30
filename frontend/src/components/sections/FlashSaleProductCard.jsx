@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { useState } from "react";
 
 import { motion } from "framer-motion";
-
+import { ShoppingCart } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getProductById } from "@/services/product.api";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useAddToCart } from "@/hooks/useAddToCart";
 
 function StockBar({ stock, maxStock }) {
   const percentage = maxStock > 0 ? Math.min((stock / maxStock) * 100, 100) : 0;
@@ -39,6 +40,7 @@ export default function FlashSaleProductCard({ product, index, maxStock }) {
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { addToCart } = useAddToCart();
   const isAdmin = user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
@@ -79,7 +81,7 @@ export default function FlashSaleProductCard({ product, index, maxStock }) {
         >
           <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
             {/* Section 1: Fixed Consistent Image Section */}
-            <div className="relative aspect-square h-44 sm:h-48 w-full shrink-0 overflow-hidden bg-muted/30 flex items-center justify-center border-b border-border/40">
+            <div className="relative aspect-square h-36 sm:h-44 w-full shrink-0 overflow-hidden bg-muted/30 flex items-center justify-center border-b border-border/40">
               <img
                 src={product.thumbnail || product.images?.[0] || undefined}
                 alt={product.title}
@@ -111,20 +113,19 @@ export default function FlashSaleProductCard({ product, index, maxStock }) {
             </div>
 
             {/* Section 2: Compact Product Information Section */}
-            <div className="flex flex-1 flex-col justify-between p-3">
-              <div className="space-y-1">
-                {product.brand && (
-                  <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground line-clamp-1">
-                    {product.brand}
-                  </p>
-                )}
+            <div className="flex flex-col p-2 sm:p-3 gap-1">
+              {product.brand && (
+                <p className="hidden sm:block text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground line-clamp-1">
+                  {product.brand}
+                </p>
+              )}
 
-                <h3 className="line-clamp-2 text-xs font-semibold text-foreground sm:text-sm leading-snug">
-                  {product.title}
-                </h3>
-              </div>
+              <h3 className="line-clamp-2 text-xs font-semibold text-foreground sm:text-sm leading-tight">
+                {product.title}
+              </h3>
 
-              <div className="mt-2 space-y-1.5">
+              {/* Desktop Layout (Original: Price line + StockBar line) */}
+              <div className="hidden sm:block space-y-1 mt-0.5">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-sm sm:text-base font-bold text-foreground">
                     {formatBDT(hasDiscount ? discountedPrice : product.price)}
@@ -135,27 +136,61 @@ export default function FlashSaleProductCard({ product, index, maxStock }) {
                     </span>
                   )}
                 </div>
-
                 {product.stock > 0 && (
                   <StockBar stock={product.stock} maxStock={maxStock} />
                 )}
               </div>
-            </div>
 
-            {!isAdmin && (
-              <div className="p-3 pt-0">
-                <button
-                  disabled={product.stock === 0}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setShowModal(true);
-                  }}
-                  className="w-full rounded-lg bg-primary py-2 text-xs sm:text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm"
-                >
-                  {product.stock === 0 ? "Unavailable" : "অর্ডার করুন"}
-                </button>
+              {/* Mobile Layout (Price Div on left stacked if discount, Stock Div on right) */}
+              <div className="flex sm:hidden items-center justify-between gap-1 mt-0.5">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground leading-tight">
+                    {formatBDT(hasDiscount ? discountedPrice : product.price)}
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-[10px] text-muted-foreground line-through leading-tight">
+                      {formatBDT(product.price)}
+                    </span>
+                  )}
+                </div>
+
+                {product.stock > 0 && (
+                  <span className={`text-[10px] shrink-0 whitespace-nowrap ${product.stock <= 5 ? "font-medium text-destructive" : "text-muted-foreground"}`}>
+                    {product.stock <= 5 ? `${product.stock} left` : `${product.stock} in stock`}
+                  </span>
+                )}
               </div>
-            )}
+
+              {!isAdmin && (
+                <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
+                  <button
+                    type="button"
+                    disabled={product.stock === 0}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addToCart(product);
+                    }}
+                    className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                    title="Add to Cart"
+                  >
+                    <ShoppingCart className="size-3.5 sm:size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={product.stock === 0}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowModal(true);
+                    }}
+                    className="flex-1 rounded-lg bg-primary py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm text-center whitespace-nowrap px-1"
+                  >
+                    {product.stock === 0 ? "Unavailable" : "অর্ডার করুন"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </Link>
       </motion.div>
