@@ -228,7 +228,7 @@ export default function AdminSettings({ children }) {
 
       <form
         onSubmit={handleSubmit}
-        className="w-full space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm"
+        className="w-full space-y-6 rounded-xl border border-border bg-card p-4 sm:p-6 shadow-sm"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -351,7 +351,7 @@ export default function AdminSettings({ children }) {
         </div>
 
         <div className="border-t border-border pt-6 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-foreground">Meta Pixel Manager (Facebook Pixel)</h3>
               <p className="text-xs text-muted-foreground">Add and manage multiple Meta Pixel IDs with custom names/labels.</p>
@@ -361,7 +361,7 @@ export default function AdminSettings({ children }) {
               variant="outline"
               size="sm"
               onClick={handleAddPixel}
-              className="flex items-center gap-1.5"
+              className="flex items-center gap-1.5 w-full sm:w-auto justify-center"
             >
               <Plus className="size-4" />
               Add New Pixel

@@ -76,6 +76,7 @@ export default function AdminChangePassword() {
             <Input
               {...register("oldPassword")}
               type="password"
+              autoComplete="current-password"
               placeholder="Enter current password"
               className={`bg-muted/30 ${errors.oldPassword ? "border-red-500" : ""}`}
             />
@@ -90,6 +91,7 @@ export default function AdminChangePassword() {
             <Input
               {...register("newPassword")}
               type="password"
+              autoComplete="new-password"
               placeholder="Enter new password"
               className={`bg-muted/30 ${errors.newPassword ? "border-red-500" : ""}`}
             />
@@ -104,6 +106,7 @@ export default function AdminChangePassword() {
             <Input
               {...register("confirmPassword")}
               type="password"
+              autoComplete="new-password"
               placeholder="Confirm new password"
               className={`bg-muted/30 ${errors.confirmPassword ? "border-red-500" : ""}`}
             />

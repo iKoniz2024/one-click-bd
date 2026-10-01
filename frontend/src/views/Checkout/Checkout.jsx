@@ -132,9 +132,6 @@ export default function Checkout({ children }) {
 
       clearLocalCart();
       refetchCartCount(0);
-      if (data?.insertedId) {
-        sendOrderInvoice(data.insertedId).catch(() => { });
-      }
       router.push(`/orders/${data.insertedId}`);
     },
     onError: (err) => {
@@ -230,16 +227,16 @@ export default function Checkout({ children }) {
             >
               <div className="rounded-xl border border-border bg-card p-3.5 sm:p-6 shadow-sm overflow-hidden w-full max-w-full">
                 <h2 className="mb-4 text-lg font-semibold text-foreground">
-                  Shipping Information
+                  Shipping Information / শিপিং তথ্য
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2 w-full">
                   <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
-                      Full Name *
+                      Full Name / আপনার নাম *
                     </label>
                     <Input
                       {...register("fullName")}
-                      placeholder="John Doe"
+                      placeholder="আপনার নাম লিখুন"
                       className={errors.fullName ? "border-gray-500" : ""}
                     />
                     {errors.fullName && (
@@ -248,11 +245,11 @@ export default function Checkout({ children }) {
                   </div>
                   <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
-                      Phone *
+                      Phone / মোবাইল নম্বর *
                     </label>
                     <Input
                       {...register("phone")}
-                      placeholder="+880 1XXXXXXXXX"
+                      placeholder="আপনার মোবাইল নম্বর দিন"
                       className={errors.phone ? "border-gray-500" : ""}
                     />
                     {errors.phone && (
@@ -261,11 +258,11 @@ export default function Checkout({ children }) {
                   </div>
                   <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
-                      Address *
+                      Address / ঠিকানা *
                     </label>
                     <Input
                       {...register("address")}
-                      placeholder="123 Main Street, Apt 4B"
+                      placeholder="ঠিকানা দিন"
                       className={errors.address ? "border-gray-500" : ""}
                     />
                     {errors.address && (
@@ -274,11 +271,11 @@ export default function Checkout({ children }) {
                   </div>
                   <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
-                      City *
+                      City / জেলা *
                     </label>
                     <Input
                       {...register("city")}
-                      placeholder="Dhaka"
+                      placeholder="আপনার জেলা / শহর"
                       className={errors.city ? "border-gray-500" : ""}
                     />
                     {errors.city && (
@@ -287,14 +284,14 @@ export default function Checkout({ children }) {
                   </div>
                   <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
-                      Delivery Area *
+                      Delivery Area / ডেলিভারি এলাকা *
                     </label>
                     <select
                       {...register("deliveryArea")}
                       className="box-border flex h-10 w-full max-w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <option value="inside_dhaka">inside Dhaka - ৳60</option>
-                      <option value="outside_dhaka">outside Dhaka - ৳120</option>
+                      <option value="inside_dhaka">Inside Dhaka (ঢাকার ভেতরে) - ৳60</option>
+                      <option value="outside_dhaka">Outside Dhaka (ঢাকার বাইরে) - ৳120</option>
                     </select>
                     {errors.deliveryArea && (
                       <p className="mt-1 text-xs text-gray-600">{errors.deliveryArea.message}</p>
@@ -379,9 +376,9 @@ export default function Checkout({ children }) {
                   type="submit"
                   className="mt-6 w-full rounded-lg"
                   size="lg"
-                  disabled={orderMutation.isPending}
+                  loading={orderMutation.isPending}
                 >
-                  {orderMutation.isPending ? "Placing Order..." : "Place Order"}
+                  Place Order
                 </Button>
               </div>
             </motion.div>

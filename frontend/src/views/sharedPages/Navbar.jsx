@@ -47,6 +47,15 @@ const Navbar = () => {
         setMounted(true);
     }, [refetchCartCount]);
 
+    useEffect(() => {
+        const query = searchParams.get("search");
+        if (query) {
+            setSearch(query);
+        } else if (pathname !== "/products") {
+            setSearch("");
+        }
+    }, [searchParams, pathname]);
+
     return (
         <header className="sticky top-0 z-100 bg-background">
             {/* Top Header */}

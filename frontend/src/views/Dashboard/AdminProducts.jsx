@@ -164,10 +164,11 @@ export default function AdminProducts({ children }) {
         return false;
       }
     }
+    const searchLower = search.trim().toLowerCase();
     const matchesSearch =
-      product.title.toLowerCase().includes(search.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(search.toLowerCase()) ||
-      product.category?.toLowerCase().includes(search.toLowerCase());
+      !searchLower ||
+      product.title?.toLowerCase().includes(searchLower);
+
     const matchesCategory = !categoryFilter || product.category === categoryFilter;
     const matchesStock =
       stockFilter === "" ||
@@ -1049,9 +1050,9 @@ export default function AdminProducts({ children }) {
                   <Button type="button" variant="outline" onClick={() => { setShowForm(false); resetForm(); }} className="rounded-xl">
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createMutation.isPending} className="rounded-xl px-6 font-bold shadow-md">
+                  <Button type="submit" loading={createMutation.isPending} className="rounded-xl px-6 font-bold shadow-md">
                     <Plus className="size-4 mr-1.5" />
-                    {createMutation.isPending ? "Creating Product..." : "Create Product"}
+                    Create Product
                   </Button>
                 </div>
               </form>

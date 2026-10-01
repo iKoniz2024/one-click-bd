@@ -106,6 +106,7 @@ export default function Login({ children }) {
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="username"
                   placeholder="admin@example.com"
                   {...register("email", {
                     required: "Email is required",
@@ -126,6 +127,7 @@ export default function Login({ children }) {
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   {...register("password", {
                     required: "Password is required",

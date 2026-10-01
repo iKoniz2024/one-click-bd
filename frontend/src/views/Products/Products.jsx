@@ -50,6 +50,11 @@ export default function Products({ initialCategories, initialProducts }) {
 
   const [sort, setSort] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [searchValue, setSearchValue] = useState(searchQuery);
+
+  useEffect(() => {
+    setSearchValue(searchQuery);
+  }, [searchQuery]);
 
   const updateCategory = (slug) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -60,7 +65,8 @@ export default function Products({ initialCategories, initialProducts }) {
 
   const applySearch = (q) => {
     const next = new URLSearchParams(searchParams.toString());
-    if (q) next.set("search", q);
+    const val = (q ?? "").trim();
+    if (val) next.set("search", val);
     else next.delete("search");
     router.push(pathname + "?" + next.toString());
   };
@@ -175,16 +181,34 @@ export default function Products({ initialCategories, initialProducts }) {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  key={searchQuery}
-                  placeholder="Search products..."
-                  defaultValue={searchQuery}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      applySearch(e.target.value);
+                  value={searchValue}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchValue(val);
+                    if (!val.trim() && searchQuery) {
+                      applySearch("");
                     }
                   }}
-                  className="pl-9"
+                  placeholder="Search products..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      applySearch(searchValue);
+                    }
+                  }}
+                  className="pl-9 pr-8"
                 />
+                {searchValue && (
+                  <button
+                    onClick={() => {
+                      setSearchValue("");
+                      applySearch("");
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    title="Clear search"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
               </div>
 
               <div className="overflow-visible">

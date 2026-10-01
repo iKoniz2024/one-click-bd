@@ -77,6 +77,7 @@ export default function ChangePassword({ children }) {
                 <Input
                   {...register("oldPassword")}
                   type="password"
+                  autoComplete="current-password"
                   placeholder="Enter current password"
                   className={errors.oldPassword ? "border-gray-500" : ""}
                 />
@@ -91,6 +92,7 @@ export default function ChangePassword({ children }) {
                 <Input
                   {...register("newPassword")}
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Enter new password"
                   className={errors.newPassword ? "border-gray-500" : ""}
                 />
@@ -105,6 +107,7 @@ export default function ChangePassword({ children }) {
                 <Input
                   {...register("confirmPassword")}
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Confirm new password"
                   className={errors.confirmPassword ? "border-gray-500" : ""}
                 />

@@ -259,7 +259,7 @@ export default function Cart({ children }) {
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <button
-                        className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border text-foreground transition-colors hover:bg-muted"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border text-foreground transition-all duration-150 active:scale-90 hover:bg-muted disabled:opacity-50"
                         disabled={item.quantity <= 1 || updateMutation.isPending}
                         onClick={() =>
                           updateMutation.mutate({
@@ -272,11 +272,11 @@ export default function Cart({ children }) {
                       >
                         <Minus className="size-3" />
                       </button>
-                      <span className="w-8 text-center text-sm font-medium">
+                      <span className="w-8 text-center text-sm font-medium select-none">
                         {item.quantity}
                       </span>
                       <button
-                        className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border text-foreground transition-colors hover:bg-muted"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border text-foreground transition-all duration-150 active:scale-90 hover:bg-muted disabled:opacity-50"
                         disabled={updateMutation.isPending}
                         onClick={() =>
                           updateMutation.mutate({
@@ -296,7 +296,7 @@ export default function Cart({ children }) {
                         {item.price ? formatBDT(item.price * item.quantity) : "N/A"}
                       </span>
                       <button
-                        className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all duration-150 active:scale-90 hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                         disabled={removeMutation.isPending}
                         onClick={() => removeMutation.mutate({ id: item.productId, size: item.size || "", color: item.color || "" })}
                       >

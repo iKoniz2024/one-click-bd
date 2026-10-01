@@ -27,9 +27,7 @@ export function getApiUrl() {
   let url = process.env.NEXT_PUBLIC_API_URL || process.env.INTERNAL_API_URL;
 
   if (!url) {
-    url = process.env.NODE_ENV === "production"
-      ? "https://oneclick-server-lemon.vercel.app/api"
-      : "http://localhost:5000/api";
+    url = window.location.origin + "/api";
   }
 
   url = url.trim().replace(/\/+$/, "");

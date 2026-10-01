@@ -185,17 +185,17 @@ export default function OrderModal({ product, open, onClose }) {
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="flex size-9 sm:size-10 items-center justify-center rounded-lg border border-border text-foreground transition-colors hover:bg-muted"
+                  className="flex size-9 sm:size-10 items-center justify-center rounded-lg border border-border text-foreground transition-all duration-150 active:scale-90 hover:bg-muted"
                 >
                   <Minus className="size-4" />
                 </button>
-                <span className="flex size-9 sm:size-10 items-center justify-center rounded-lg border border-border text-xs sm:text-sm font-medium">
+                <span className="flex size-9 sm:size-10 items-center justify-center rounded-lg border border-border text-xs sm:text-sm font-medium select-none">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuantity(quantity + 1)}
-                  className="flex size-9 sm:size-10 items-center justify-center rounded-lg border border-border text-foreground transition-colors hover:bg-muted"
+                  className="flex size-9 sm:size-10 items-center justify-center rounded-lg border border-border text-foreground transition-all duration-150 active:scale-90 hover:bg-muted"
                 >
                   <Plus className="size-4" />
                 </button>
@@ -209,7 +209,7 @@ export default function OrderModal({ product, open, onClose }) {
             type="button"
             onClick={handleAddToCartOnly}
             disabled={isOutOfStock}
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-2 border-primary px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border-2 border-primary px-3 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-primary transition-all duration-150 hover:bg-primary/10 active:scale-95 disabled:opacity-50"
           >
             <ShoppingCart className="size-3.5 sm:size-4" />
             Add to cart
@@ -218,7 +218,7 @@ export default function OrderModal({ product, open, onClose }) {
             type="button"
             onClick={handleOrderNow}
             disabled={isOutOfStock}
-            className="flex-1 flex items-center justify-center rounded-lg bg-primary px-4 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm whitespace-nowrap"
+            className="flex-1 flex items-center justify-center rounded-lg bg-primary px-4 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground transition-all duration-150 hover:bg-primary/90 active:scale-95 disabled:opacity-50 shadow-xs whitespace-nowrap"
           >
             {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
           </button>

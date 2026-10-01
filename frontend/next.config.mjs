@@ -13,8 +13,13 @@
 const isVercel = process.env.VERCEL === '1' || Boolean(process.env.VERCEL);
 
 const nextConfig = {
+  compress: false,
   reactStrictMode: true,
+  poweredByHeader: false,
   ...(isVercel ? {} : { output: 'standalone' }),
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@tanstack/react-query'],
+  },
   async redirects() {
     return [
       {

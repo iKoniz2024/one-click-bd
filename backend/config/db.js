@@ -13,6 +13,11 @@ const client = new MongoClient(uri, {
         strict: false,
         deprecationErrors: true,
     },
+    maxPoolSize: 20,
+    minPoolSize: 2,
+    maxIdleTimeMS: 30000,
+    connectTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
 });
 
 let db;

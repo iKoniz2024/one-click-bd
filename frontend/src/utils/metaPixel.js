@@ -6,16 +6,19 @@ export const trackMetaPixelEvent = (eventName, data = {}) => {
     try {
       const payload = { ...data };
 
-      // Ensure currency is always a clean 3-letter uppercase ISO currency code
-      if (payload.currency || eventName === "Purchase" || eventName === "AddToCart" || eventName === "InitiateCheckout") {
-        payload.currency = String(payload.currency || "BDT").toUpperCase().trim();
+      // Ensure currency is always a valid 3-letter uppercase ISO currency string (default BDT)
+      let curr = String(payload.currency || "BDT").trim().toUpperCase();
+      if (!/^[A-Z]{3}$/.test(curr)) {
+        curr = "BDT";
       }
+      payload.currency = curr;
 
       // Ensure value is always a valid positive number
-      if (payload.value !== undefined || eventName === "Purchase" || eventName === "AddToCart" || eventName === "InitiateCheckout") {
-        const val = Number(payload.value);
-        payload.value = !isNaN(val) && val > 0 ? Number(val.toFixed(2)) : 0.01;
+      let val = parseFloat(payload.value);
+      if (isNaN(val) || val <= 0) {
+        val = 0.01;
       }
+      payload.value = Number(val.toFixed(2));
 
       window.fbq("track", eventName, payload);
 

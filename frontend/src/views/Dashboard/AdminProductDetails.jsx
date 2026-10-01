@@ -422,7 +422,7 @@ export default function AdminProductDetails({ children }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       <Helmet>
         <title>Admin Product Details | {siteName}</title>
       </Helmet>
@@ -437,21 +437,21 @@ export default function AdminProductDetails({ children }) {
       </Button>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-center gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
             <img
               src={product.thumbnail || product.images?.[0] || undefined}
               alt={product.title}
-              className="size-16 shrink-0 rounded-xl object-cover"
+              className="size-12 sm:size-16 shrink-0 rounded-xl object-cover"
             />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground truncate">
                 {product.title}
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">{product.brand} &middot; {product.category}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground truncate">{product.brand} &middot; {product.category}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <a
               href={`/product/${id}`}
               target="_blank"
@@ -472,8 +472,8 @@ export default function AdminProductDetails({ children }) {
                 Delete
               </Button>
             ) : (
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
-                <span className="text-sm text-foreground">Delete this product?</span>
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
+                <span className="text-xs sm:text-sm text-foreground">Delete product?</span>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -499,15 +499,15 @@ export default function AdminProductDetails({ children }) {
           className="space-y-6"
         >
           {/* Header Action Bar */}
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-5 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs">
             <div>
-              <h2 className="text-lg font-bold text-foreground">Edit Product</h2>
+              <h2 className="text-base sm:text-lg font-bold text-foreground">Edit Product</h2>
               <p className="text-xs text-muted-foreground">Update product specifications, inventory, variants, and media</p>
             </div>
             <Button
               type="submit"
               disabled={updateMutation.isPending}
-              className="rounded-xl px-6 font-bold shadow-sm"
+              className="w-full sm:w-auto rounded-xl px-6 font-bold shadow-sm"
             >
               <Save className="size-4 mr-1.5" />
               {updateMutation.isPending ? "Saving Changes..." : "Save Changes"}
@@ -772,7 +772,7 @@ export default function AdminProductDetails({ children }) {
 
                 {/* Size Measurements Chart Builder */}
                 {selectedSizes.length > 0 && (
-                  <div className="space-y-4 rounded-xl border border-border p-4 bg-muted/20">
+                  <div className="space-y-4 rounded-xl border border-border p-3 sm:p-4 bg-muted/20 overflow-x-auto min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/50 pb-3">
                       <div>
                         <label className="block text-xs font-bold text-foreground">Size Measurements Chart Builder</label>
@@ -800,7 +800,7 @@ export default function AdminProductDetails({ children }) {
                         return (
                           <div key={size} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-xl border border-border/60 bg-background p-3">
                             <div className="size-9 shrink-0 font-bold text-xs bg-primary text-primary-foreground rounded-lg flex items-center justify-center shadow-xs">{size}</div>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1 w-full">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 flex-1 w-full min-w-0">
                               {activeFields.map((f) => (
                                 <div key={f.key} className="space-y-1">
                                   <label className="text-[11px] font-medium text-muted-foreground block truncate">{f.label}</label>
@@ -1086,19 +1086,19 @@ export default function AdminProductDetails({ children }) {
           </div>
 
           {/* Bottom Action Bar */}
-          <div className="flex items-center justify-end gap-3 rounded-2xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 rounded-2xl border border-border bg-card p-4 shadow-xs w-full">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.push("/dashboard/products")}
-              className="rounded-xl"
+              className="w-full sm:w-auto rounded-xl"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={updateMutation.isPending}
-              className="rounded-xl px-6 font-bold shadow-sm"
+              className="w-full sm:w-auto rounded-xl px-6 font-bold shadow-sm"
             >
               <Save className="size-4 mr-1.5" />
               {updateMutation.isPending ? "Saving Changes..." : "Save Changes"}

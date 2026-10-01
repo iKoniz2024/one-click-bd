@@ -141,24 +141,24 @@ export default function AdminOrderDetails({ children }) {
       </Button>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
               Order #{order._id?.slice(-8).toUpperCase()}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Placed on {formatDate(order.createdAt)}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative inline-block">
+            <div className="relative inline-block w-full sm:w-auto">
               <select
                 value={order.orderStatus || "pending"}
                 disabled={statusMutation.isPending}
                 onChange={(e) =>
                   statusMutation.mutate({ orderStatus: e.target.value })
                 }
-                className={`appearance-none rounded-full border px-3 py-1.5 pr-8 text-sm font-medium ${
+                className={`w-full sm:w-auto appearance-none rounded-full border px-4 py-1.5 pr-8 text-sm font-medium ${
                   statusColors[order.orderStatus] || "bg-muted text-foreground"
                 } cursor-pointer focus:outline-none`}
               >
@@ -168,14 +168,14 @@ export default function AdminOrderDetails({ children }) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-current" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-current" />
             </div>
           </div>
         </div>
 
         {order.orderStatus !== "cancelled" && (
-          <div className="mb-8 rounded-xl border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between">
+          <div className="mb-8 rounded-xl border border-border bg-card p-4 sm:p-6 shadow-sm overflow-x-auto">
+            <div className="flex items-center justify-between min-w-[420px] sm:min-w-0">
               {STATUS_STEPS.map((step, i) => (
                 <div key={step} className="flex flex-1 items-center">
                   <div className="flex flex-col items-center">
@@ -188,7 +188,7 @@ export default function AdminOrderDetails({ children }) {
                     >
                       {i + 1}
                     </div>
-                    <span className="mt-1.5 text-[11px] capitalize text-muted-foreground">
+                    <span className="mt-1.5 text-[11px] capitalize text-muted-foreground whitespace-nowrap">
                       {step}
                     </span>
                   </div>

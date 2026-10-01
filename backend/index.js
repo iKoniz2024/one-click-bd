@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
 const path = require("path");
 
 dotenv.config();
@@ -19,6 +20,12 @@ const bannerRoutes = require("./routes/banner.route");
 
 const app = express();
 const port = process.env.PORT || 5000;
+
+// Enable response compression for fast payload transfers in production
+app.use(compression({
+    level: 6,
+    threshold: 1024,
+}));
 
 const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, "") : "";
 const allowedOrigins = [

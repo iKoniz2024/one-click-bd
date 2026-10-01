@@ -14,9 +14,12 @@ const setupIndexes = async (db) => {
         await productsCollection.createIndex({ discountPercentage: -1 });
         await productsCollection.createIndex({ rating: -1 });
         await productsCollection.createIndex({ "meta.createdAt": -1 });
+        await productsCollection.createIndex({ vendorId: 1 });
 
-        // Compound index for category + price
+        // Compound indexes for fast product sorting & stock filtering
+        await productsCollection.createIndex({ title: 1, stock: -1 });
         await productsCollection.createIndex({ category: 1, price: 1 });
+        await productsCollection.createIndex({ category: 1, stock: -1 });
 
         // Text index for fast search on products
         await productsCollection.createIndex(

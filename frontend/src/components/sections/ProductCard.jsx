@@ -59,9 +59,12 @@ const badgeConfig = {
   },
 };
 
+import { Check } from "lucide-react";
+
 export default function ProductCard({ product, index, badge }) {
   const [showModal, setShowModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { addToCart } = useAddToCart();
@@ -88,6 +91,8 @@ export default function ProductCard({ product, index, badge }) {
       setShowModal(true);
     } else {
       addToCart(product);
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 1200);
     }
   };
 
@@ -166,18 +171,21 @@ export default function ProductCard({ product, index, badge }) {
             </div>
 
             {/* Section 2: Compact Product Information Section */}
-            <div className="flex flex-1 flex-col p-2 sm:p-3 gap-1">
-              <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground truncate h-4 leading-4">
+            <div className="flex flex-1 flex-col p-2 sm:p-3 gap-1.5">
+              <p className="hidden sm:block text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground truncate h-4 leading-4">
                 {product.brand || "\u00A0"}
               </p>
 
-              <h3 className="line-clamp-2 text-xs font-semibold text-foreground sm:text-sm leading-tight h-8 sm:h-10 overflow-hidden">
-                {product.title}
-              </h3>
+              {/* Title Section (Consistent 2-line height allocation with vertical centering) */}
+              <div className="h-8 sm:h-10 overflow-hidden flex items-center">
+                <h3 className="line-clamp-2 text-xs font-semibold text-foreground sm:text-sm leading-tight sm:leading-snug">
+                  {product.title}
+                </h3>
+              </div>
 
-              {/* Desktop Layout (Original: Price line + StockBar line) */}
-              <div className="hidden sm:block space-y-1 mt-0.5">
-                <div className="flex items-baseline gap-1.5">
+              {/* Desktop Layout (Price line + StockBar line with fixed slot heights) */}
+              <div className="hidden sm:block space-y-1">
+                <div className="flex items-center gap-1.5 h-6 sm:h-7">
                   <span className="text-sm sm:text-base font-bold text-foreground">
                     {formatBDT(hasDiscount ? discountedPrice : product.price)}
                   </span>
@@ -187,12 +195,14 @@ export default function ProductCard({ product, index, badge }) {
                     </span>
                   )}
                 </div>
-                <StockBar stock={product.stock} maxStock={100} />
+                <div className="h-7 sm:h-8 flex flex-col justify-center">
+                  <StockBar stock={product.stock} maxStock={100} />
+                </div>
               </div>
 
-              {/* Mobile Layout (Price Div on left stacked if discount, Stock Div on right) */}
-              <div className="flex sm:hidden items-center justify-between gap-1 mt-0.5">
-                <div className="flex flex-col">
+              {/* Mobile Layout (Fixed slot height for mobile price/stock) */}
+              <div className="flex sm:hidden items-center justify-between gap-1 h-7">
+                <div className="flex flex-col justify-center">
                   <span className="text-xs font-bold text-foreground leading-tight">
                     {formatBDT(hasDiscount ? discountedPrice : product.price)}
                   </span>
@@ -216,13 +226,28 @@ export default function ProductCard({ product, index, badge }) {
                     type="button"
                     disabled={isOutOfStock}
                     onClick={handleAddToCartClick}
-                    className="flex size-8 sm:h-9 sm:w-auto shrink-0 items-center justify-center rounded-lg border-2 border-primary text-primary transition-colors hover:bg-primary/10 disabled:opacity-50 sm:px-2.5"
+                    className={`flex size-8 sm:h-9 sm:w-auto shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-150 active:scale-95 disabled:opacity-50 sm:px-2.5 ${
+                      justAdded
+                        ? "border-green-600 bg-green-600 text-white"
+                        : "border-primary text-primary hover:bg-primary/10"
+                    }`}
                     title="Add to Cart"
                   >
-                    <ShoppingCart className="size-3.5 sm:hidden" />
-                    <span className="hidden sm:inline text-xs font-bold whitespace-nowrap">
-                      Add to Cart
-                    </span>
+                    {justAdded ? (
+                      <>
+                        <Check className="size-3.5" />
+                        <span className="hidden sm:inline text-xs font-bold whitespace-nowrap ml-1">
+                          Added!
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="size-3.5 sm:hidden" />
+                        <span className="hidden sm:inline text-xs font-bold whitespace-nowrap">
+                          Add to Cart
+                        </span>
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -232,7 +257,7 @@ export default function ProductCard({ product, index, badge }) {
                       e.stopPropagation();
                       setShowModal(true);
                     }}
-                    className="flex-1 rounded-lg bg-primary py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-sm text-center whitespace-nowrap px-1"
+                    className="flex-1 rounded-lg bg-primary py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-primary-foreground transition-all duration-150 hover:bg-primary/90 active:scale-95 disabled:opacity-50 shadow-xs text-center whitespace-nowrap px-1"
                   >
                     {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
                   </button>

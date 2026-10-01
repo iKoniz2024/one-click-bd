@@ -311,7 +311,7 @@ const getAllProducts = async (req, res) => {
             }
         }
 
-        // 2. Resolve Search Query Filtering (Strict Title Match Only)
+        // 2. Resolve Search Query Filtering (Title Match Only)
         if (cleanSearch) {
             const searchRegex = new RegExp(escapeRegex(cleanSearch), "i");
             queryConditions.push({ title: searchRegex });
@@ -335,7 +335,7 @@ const getAllProducts = async (req, res) => {
             sortOption = { price: -1 };
         }
 
-        const cacheKey = `products_${page}_${limit}_${encodeURIComponent(cleanSearch)}_${encodeURIComponent(category)}_${encodeURIComponent(brand)}_${sort}_strict_title`;
+        const cacheKey = `products_${page}_${limit}_${encodeURIComponent(cleanSearch)}_${encodeURIComponent(category)}_${encodeURIComponent(brand)}_${sort}_title_v4`;
         const result = await withCache(cacheKey, 600, async () => {
             const bestSellingIds = await getBestSellingIds(db);
             const bestSellingIdsSet = new Set(bestSellingIds);
