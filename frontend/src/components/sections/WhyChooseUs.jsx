@@ -7,9 +7,9 @@ import FeatureCard from "./FeatureCard";
 const FEATURES = [
   {
     icon: Truck,
-    title: "Free Shipping",
+    title: "Fast Delivery",
     description:
-      "Enjoy fast and free shipping on eligible orders with reliable delivery services.",
+      "Prompt and reliable delivery service straight to your doorstep across Bangladesh.",
   },
   {
     icon: ShieldCheck,

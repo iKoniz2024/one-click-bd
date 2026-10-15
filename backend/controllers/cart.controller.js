@@ -99,7 +99,7 @@ const getCart = async (req, res) => {
         const db = getDB();
         const cartsCollection = db.collection("carts");
 
-        const cart = await cartsCollection.aggregate([
+        const rawCart = await cartsCollection.aggregate([
             {
                 $match: {
                     userId: new ObjectId(req.user.id)
@@ -126,6 +126,7 @@ const getCart = async (req, res) => {
                     title: "$product.title",
                     thumbnail: { $ifNull: ["$items.colorImage", "$product.thumbnail"] },
                     price: "$product.price",
+                    discountPercentage: { $ifNull: ["$product.discountPercentage", 0] },
                     stock: "$product.stock",
                     brand: "$product.brand",
                     category: "$product.category",
@@ -133,17 +134,11 @@ const getCart = async (req, res) => {
                     color: "$items.color",
                     colorImage: "$items.colorImage",
                     quantity: "$items.quantity",
-                    subtotal: {
-                        $multiply: [
-                            "$items.quantity",
-                            "$product.price"
-                        ]
-                    }
                 }
             }
         ]).toArray();
 
-        if (!cart.length) {
+        if (!rawCart.length) {
             return res.send({
                 totalItems: 0,
                 totalPrice: 0,
@@ -151,14 +146,32 @@ const getCart = async (req, res) => {
             });
         }
 
+        const cart = rawCart.map((item) => {
+            const originalPrice = Number(item.price || 0);
+            const discountPercentage = Number(item.discountPercentage || 0);
+            const hasDiscount = discountPercentage > 0;
+            const price = hasDiscount
+                ? Number((originalPrice * (1 - discountPercentage / 100)).toFixed(2))
+                : originalPrice;
+            const quantity = Number(item.quantity || 1);
+            const subtotal = Number((price * quantity).toFixed(2));
+
+            return {
+                ...item,
+                price,
+                originalPrice,
+                discountPercentage,
+                subtotal,
+            };
+        });
+
         const totalItems = cart.reduce(
             (sum, item) => sum + item.quantity,
             0
         );
 
-        const totalPrice = cart.reduce(
-            (sum, item) => sum + item.subtotal,
-            0
+        const totalPrice = Number(
+            cart.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)
         );
 
         res.send({

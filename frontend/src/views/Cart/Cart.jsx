@@ -135,9 +135,8 @@ export default function Cart({ children }) {
 
   const totalItems = items.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
   const totalPrice = items.reduce((sum, item) => sum + (item.price * (item.quantity ?? 1)), 0);
-  const FREE_SHIPPING_THRESHOLD = 1000;
-  const SHIPPING_INSIDE_DHAKA = 60;
-  const SHIPPING_OUTSIDE_DHAKA = 120;
+  const SHIPPING_INSIDE_DHAKA = 70;
+  const SHIPPING_OUTSIDE_DHAKA = 130;
 
   const itemStatuses = items.map((item) => ({ item, ...getItemStatus(item) }));
   const hasStockIssues = itemStatuses.some((s) => !s.ok);
@@ -246,6 +245,16 @@ export default function Cart({ children }) {
                           Size: {item.size}
                         </span>
                       )}
+                      {item.originalPrice && item.originalPrice > item.price && (
+                        <span className="line-through text-muted-foreground/70">
+                          {formatBDT(item.originalPrice)}
+                        </span>
+                      )}
+                      {item.discountPercentage > 0 && (
+                        <span className="rounded bg-secondary/15 px-1.5 py-0.5 text-[10px] font-bold text-secondary">
+                          -{Math.round(item.discountPercentage)}%
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -292,9 +301,16 @@ export default function Cart({ children }) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="shrink-0 text-sm font-bold text-foreground">
-                        {item.price ? formatBDT(item.price * item.quantity) : "N/A"}
-                      </span>
+                      <div className="text-right">
+                        <span className="shrink-0 text-sm font-bold text-foreground block">
+                          {item.price ? formatBDT(item.price * item.quantity) : "N/A"}
+                        </span>
+                        {item.originalPrice && item.originalPrice > item.price && (
+                          <span className="text-xs text-muted-foreground line-through block">
+                            {formatBDT(item.originalPrice * item.quantity)}
+                          </span>
+                        )}
+                      </div>
                       <button
                         className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all duration-150 active:scale-90 hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                         disabled={removeMutation.isPending}
@@ -319,17 +335,11 @@ export default function Cart({ children }) {
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
-                  {totalPrice >= FREE_SHIPPING_THRESHOLD ? (
-                    <span className="text-foreground font-medium">Free</span>
-                  ) : (
-                    <span className="shrink-0">{formatBDT(SHIPPING_INSIDE_DHAKA)} - {formatBDT(SHIPPING_OUTSIDE_DHAKA)}</span>
-                  )}
+                  <span className="shrink-0">{formatBDT(SHIPPING_INSIDE_DHAKA)} - {formatBDT(SHIPPING_OUTSIDE_DHAKA)}</span>
                 </div>
-                {totalPrice < FREE_SHIPPING_THRESHOLD && (
-                  <p className="text-xs text-muted-foreground">
-                    Add {formatBDT(FREE_SHIPPING_THRESHOLD - totalPrice)} more for free shipping. Final cost depends on your location.
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  Final shipping cost depends on your location ({formatBDT(SHIPPING_INSIDE_DHAKA)} inside Dhaka, {formatBDT(SHIPPING_OUTSIDE_DHAKA)} outside Dhaka).
+                </p>
                 <div className="border-t border-border pt-3">
                   <div className="flex justify-between text-base font-bold text-foreground">
                     <span>Total</span>

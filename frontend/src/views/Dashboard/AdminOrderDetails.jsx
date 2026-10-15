@@ -229,7 +229,19 @@ export default function AdminOrderDetails({ children }) {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground">{item.title}</p>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                        <span>Qty: {item.quantity} &times; ৳{item.price?.toLocaleString()}</span>
+                        <span className="font-semibold text-foreground">
+                          Qty: {item.quantity} &times; ৳{item.price?.toLocaleString()}
+                        </span>
+                        {((item.originalPrice && item.originalPrice > item.price) || (item.discountPercentage > 0)) && (
+                          <span className="line-through text-muted-foreground/70">
+                            ৳{(item.originalPrice || Math.round(item.price / (1 - item.discountPercentage / 100))).toLocaleString()}
+                          </span>
+                        )}
+                        {item.discountPercentage > 0 && (
+                          <span className="rounded bg-secondary/15 px-1.5 py-0.5 text-[10px] font-bold text-secondary">
+                            -{Math.round(item.discountPercentage)}%
+                          </span>
+                        )}
                         {item.color && (
                           <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
                             Color: {item.color}
@@ -242,9 +254,16 @@ export default function AdminOrderDetails({ children }) {
                         )}
                       </div>
                     </div>
-                    <span className="text-sm font-medium text-foreground">
-                      ৳{item.subtotal?.toLocaleString()}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-sm font-medium text-foreground block">
+                        ৳{item.subtotal?.toLocaleString()}
+                      </span>
+                      {item.originalPrice && item.originalPrice > item.price && (
+                        <span className="text-xs text-muted-foreground line-through block">
+                          ৳{(item.originalPrice * item.quantity).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

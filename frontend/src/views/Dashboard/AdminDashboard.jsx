@@ -22,7 +22,39 @@ const STATUS_CONFIG = {
   cancelled: { label: "Cancelled", color: "bg-red-500", lightBg: "bg-red-500/10 text-red-600 dark:text-red-400", icon: XCircle },
 };
 
-function StatCard({ title, value, icon: Icon, color, loading, delay }) {
+function StatCard({ title, value, icon: Icon, color, loading, delay, href }) {
+  const cardContent = (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">{title}</p>
+        {loading ? (
+          <Skeleton className="mt-2 h-8 w-24" />
+        ) : (
+          <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+        )}
+      </div>
+      <div className={`flex size-12 items-center justify-center rounded-xl ${color} transition-all duration-200 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground`}>
+        <Icon className="size-6" />
+      </div>
+    </div>
+  );
+
+  const containerClasses = "group block rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5 cursor-pointer";
+
+  if (href) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay }}
+      >
+        <Link href={href} className={containerClasses}>
+          {cardContent}
+        </Link>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -30,19 +62,7 @@ function StatCard({ title, value, icon: Icon, color, loading, delay }) {
       transition={{ delay }}
       className="rounded-xl border border-border bg-card p-5 shadow-sm"
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          {loading ? (
-            <Skeleton className="mt-2 h-8 w-24" />
-          ) : (
-            <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
-          )}
-        </div>
-        <div className={`flex size-12 items-center justify-center rounded-xl ${color}`}>
-          <Icon className="size-6" />
-        </div>
-      </div>
+      {cardContent}
     </motion.div>
   );
 }
@@ -109,6 +129,7 @@ export default function AdminDashboard() {
           value={formatBDT(totalRevenue)}
           icon={DollarSign}
           color="bg-muted text-foreground"
+          href="/dashboard/orders"
           delay={0}
         />
         <StatCard
@@ -116,6 +137,7 @@ export default function AdminDashboard() {
           value={totalOrders}
           icon={ShoppingCart}
           color="bg-muted text-foreground"
+          href="/dashboard/orders"
           delay={0.05}
         />
         <StatCard
@@ -123,6 +145,7 @@ export default function AdminDashboard() {
           value={totalProducts}
           icon={Package}
           color="bg-muted text-foreground"
+          href="/dashboard/products"
           delay={0.1}
         />
         <StatCard
@@ -130,6 +153,7 @@ export default function AdminDashboard() {
           value={totalCategories}
           icon={FolderOpen}
           color="bg-muted text-foreground"
+          href="/dashboard/categories"
           delay={0.15}
         />
       </div>
@@ -197,16 +221,17 @@ export default function AdminDashboard() {
               const count = ordersByStatus[key] || 0;
               
               return (
-                <div 
+                <Link 
                   key={key} 
-                  className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/20 p-4 transition-all hover:bg-muted/40 hover:shadow-sm"
+                  href={`/dashboard/orders?status=${key}`}
+                  className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/20 p-4 transition-all hover:bg-muted/40 hover:border-primary/50 hover:shadow-sm hover:-translate-y-0.5 cursor-pointer group"
                 >
-                  <div className={`mb-3 flex size-10 items-center justify-center rounded-full ${config.lightBg}`}>
+                  <div className={`mb-3 flex size-10 items-center justify-center rounded-full ${config.lightBg} transition-transform group-hover:scale-110`}>
                     <Icon className="size-5" />
                   </div>
                   <span className="text-2xl font-bold text-foreground">{count}</span>
-                  <span className="mt-1 text-xs text-muted-foreground">{config.label}</span>
-                </div>
+                  <span className="mt-1 text-xs text-muted-foreground transition-colors group-hover:text-foreground">{config.label}</span>
+                </Link>
               );
             })}
           </div>

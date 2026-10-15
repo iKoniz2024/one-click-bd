@@ -59,42 +59,45 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-foreground">
-              Quick Links
-            </h3>
-            <ul className="space-y-2.5">
-              {QUICK_LINKS.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.to}
-                    className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Quick Links & Services & Help (Parallel on mobile, separate columns on desktop) */}
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:contents">
+            {/* Quick Links */}
+            <div>
+              <h3 className="mb-4 text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground">
+                Quick Links
+              </h3>
+              <ul className="space-y-2.5">
+                {QUICK_LINKS.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.to}
+                      className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Services & Help */}
-          <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-foreground">
-              Services & Help
-            </h3>
-            <ul className="space-y-2.5">
-              {SERVICES_LINKS.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.to}
-                    className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {/* Services & Help */}
+            <div>
+              <h3 className="mb-4 text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground">
+                Services & Help
+              </h3>
+              <ul className="space-y-2.5">
+                {SERVICES_LINKS.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.to}
+                      className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Social Icons & Contact Info Column */}

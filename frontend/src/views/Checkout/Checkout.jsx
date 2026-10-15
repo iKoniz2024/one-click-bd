@@ -87,14 +87,12 @@ export default function Checkout({ children }) {
     0
   );
 
-  const FREE_SHIPPING_THRESHOLD = 1000;
-  const SHIPPING_INSIDE_DHAKA = 60;
-  const SHIPPING_OUTSIDE_DHAKA = 120;
+  const SHIPPING_INSIDE_DHAKA = 70;
+  const SHIPPING_OUTSIDE_DHAKA = 130;
 
   const watchedDeliveryArea = useWatch({ name: "deliveryArea", control });
   const isInsideDhaka = watchedDeliveryArea === "inside_dhaka";
-  const isFreeShipping = totalPrice >= FREE_SHIPPING_THRESHOLD;
-  const shipping = isFreeShipping ? 0 : (isInsideDhaka ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA);
+  const shipping = isInsideDhaka ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA;
   const total = totalPrice + shipping;
 
   useEffect(() => {
@@ -290,8 +288,8 @@ export default function Checkout({ children }) {
                       {...register("deliveryArea")}
                       className="box-border flex h-10 w-full max-w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <option value="inside_dhaka">Inside Dhaka (ঢাকার ভেতরে) - ৳60</option>
-                      <option value="outside_dhaka">Outside Dhaka (ঢাকার বাইরে) - ৳120</option>
+                      <option value="inside_dhaka">Inside Dhaka (ঢাকার ভেতরে) - ৳70</option>
+                      <option value="outside_dhaka">Outside Dhaka (ঢাকার বাইরে) - ৳130</option>
                     </select>
                     {errors.deliveryArea && (
                       <p className="mt-1 text-xs text-gray-600">{errors.deliveryArea.message}</p>
@@ -335,11 +333,22 @@ export default function Checkout({ children }) {
                         <p className="truncate text-xs sm:text-sm font-medium text-foreground">
                           {item.title}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Qty: {item.quantity}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          <span>Qty: {item.quantity}</span>
+                          <span className="font-semibold text-foreground">&times; {formatBDT(item.price)}</span>
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <span className="line-through text-muted-foreground/70">
+                              {formatBDT(item.originalPrice)}
+                            </span>
+                          )}
+                          {item.discountPercentage > 0 && (
+                            <span className="rounded bg-secondary/15 px-1 py-0.2 text-[9px] font-bold text-secondary">
+                              -{Math.round(item.discountPercentage)}%
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <span className="shrink-0 text-xs sm:text-sm font-medium text-foreground">
+                      <span className="shrink-0 text-xs sm:text-sm font-semibold text-foreground">
                         {formatBDT(item.price * item.quantity)}
                       </span>
                     </div>
@@ -353,17 +362,8 @@ export default function Checkout({ children }) {
                   </div>
                   <div className="flex justify-between items-center text-muted-foreground">
                     <span>Shipping {isInsideDhaka ? "(Dhaka)" : "(Outside Dhaka)"}</span>
-                    {isFreeShipping ? (
-                      <span className="text-foreground font-medium">Free</span>
-                    ) : (
-                      <span className="shrink-0 text-xs font-medium text-foreground">{formatBDT(shipping)}</span>
-                    )}
+                    <span className="shrink-0 text-xs font-medium text-foreground">{formatBDT(shipping)}</span>
                   </div>
-                  {!isFreeShipping && (
-                    <p className="text-xs text-muted-foreground">
-                      Add {formatBDT(FREE_SHIPPING_THRESHOLD - totalPrice)} more for free shipping
-                    </p>
-                  )}
                   <div className="border-t border-border pt-3">
                     <div className="flex items-baseline justify-between text-base font-bold text-foreground">
                       <span>Total</span>

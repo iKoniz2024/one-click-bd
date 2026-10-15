@@ -42,6 +42,8 @@ export function addToLocalCart(item) {
     existing.thumbnail = item.thumbnail || existing.thumbnail;
     existing.colorImage = item.colorImage || existing.colorImage;
     existing.price = item.price || existing.price;
+    if (item.originalPrice !== undefined) existing.originalPrice = item.originalPrice;
+    if (item.discountPercentage !== undefined) existing.discountPercentage = item.discountPercentage;
     existing.stock = item.stock ?? existing.stock;
     existing.category = item.category || existing.category;
   } else {

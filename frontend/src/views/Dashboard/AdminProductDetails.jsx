@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/skeleton";
 import CategorySelect from "@/components/ui/CategorySelect";
+import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal";
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
 
@@ -461,36 +462,15 @@ export default function AdminProductDetails({ children }) {
               <Eye className="size-3.5 text-primary" />
               View Live Product
             </a>
-            {!showDeleteConfirm ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive font-medium"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="size-4" data-icon="inline-start" />
-                Delete
-              </Button>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
-                <span className="text-xs sm:text-sm text-foreground">Delete product?</span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={deleteMutation.isPending}
-                  onClick={() => deleteMutation.mutate(product._id)}
-                >
-                  {deleteMutation.isPending ? "..." : "Yes"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDeleteConfirm(false)}
-                >
-                  No
-                </Button>
-              </div>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive font-medium"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="size-4" data-icon="inline-start" />
+              Delete
+            </Button>
           </div>
         </div>
 
@@ -570,6 +550,11 @@ export default function AdminProductDetails({ children }) {
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-foreground">Discount (%)</label>
                 <Input {...register("discountPercentage")} type="number" step="0.1" min="0" max="100" placeholder="0" />
+                {Number(watch("price") || 0) > 0 && Number(watch("discountPercentage") || 0) > 0 && (
+                  <p className="mt-1 text-xs font-semibold text-secondary">
+                    Selling Price: {formatBDT(Number(watch("price")) * (1 - Number(watch("discountPercentage")) / 100))}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -1106,6 +1091,20 @@ export default function AdminProductDetails({ children }) {
           </div>
         </form>
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          if (product?._id) {
+            deleteMutation.mutate(product._id);
+          }
+        }}
+        loading={deleteMutation.isPending}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${product?.title}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

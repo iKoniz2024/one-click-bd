@@ -23,6 +23,8 @@ export function useAddToCart() {
         thumbnail: colorImage || product.thumbnail || product.images?.[0] || null,
         colorImage: colorImage || null,
         price: finalPrice,
+        originalPrice: Number(product.price || 0),
+        discountPercentage: Number(product.discountPercentage || 0),
         stock: product.stock ?? 0,
         category: typeof product.category === "string"
           ? product.category

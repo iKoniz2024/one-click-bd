@@ -1,7 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { motion } from "framer-motion";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal";
 
 const statusOptions = [
   "pending",
@@ -34,10 +36,18 @@ const statusColors = {
 export default function AdminOrders({ children }) {
   const { siteName } = useSettings();
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [deletingId, setDeletingId] = useState(null);
+  const searchParams = useSearchParams();
+  const queryStatus = searchParams?.get("status");
+  const [statusFilter, setStatusFilter] = useState(queryStatus || "all");
+  const [deletingOrder, setDeletingOrder] = useState(null);
   const [page, setPage] = useState(1);
   const limit = 10;
+
+  useEffect(() => {
+    if (queryStatus && (statusOptions.includes(queryStatus.toLowerCase()) || queryStatus.toLowerCase() === "all")) {
+      setStatusFilter(queryStatus.toLowerCase());
+    }
+  }, [queryStatus]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -104,7 +114,7 @@ export default function AdminOrders({ children }) {
     },
     onSuccess: () => {
       toast.success("Order deleted successfully");
-      setDeletingId(null);
+      setDeletingOrder(null);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
@@ -186,17 +196,17 @@ export default function AdminOrders({ children }) {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm table-fixed min-w-[850px]">
             <thead className="border-b border-border bg-muted/50">
               <tr>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Order ID</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Customer</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Items</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Total</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Payment</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Date</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground w-[12%]">Order ID</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground w-[22%]">Customer</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground w-[7%]">Items</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground w-[12%]">Total</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground w-[16%]">Payment</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground w-[12%]">Date</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground w-[11%]">Status</th>
+                <th className="px-4 py-3 font-medium text-muted-foreground text-right w-[8%] min-w-[70px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -257,49 +267,41 @@ export default function AdminOrders({ children }) {
                       <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 size-3 -translate-y-1/2 text-current" />
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <Button asChild variant="ghost" size="sm">
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button asChild variant="ghost" size="sm" title="View Order Details">
                         <Link href={`/dashboard/orders/${order._id}`}>
                           <Eye className="size-4" />
                         </Link>
                       </Button>
-                      {deletingId === order._id ? (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            disabled={deleteMutation.isPending}
-                            onClick={() => deleteMutation.mutate(order._id)}
-                            className="h-7 text-xs px-2"
-                          >
-                            {deleteMutation.isPending ? "..." : "Delete"}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeletingId(null)}
-                            className="h-7 text-xs px-2"
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setDeletingId(order._id)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        title="Delete Order"
+                        onClick={() => setDeletingOrder(order)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
                     </div>
                   </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
+
+          <DeleteConfirmModal
+            open={!!deletingOrder}
+            onClose={() => setDeletingOrder(null)}
+            onConfirm={() => {
+              if (deletingOrder?._id) {
+                deleteMutation.mutate(deletingOrder._id);
+              }
+            }}
+            loading={deleteMutation.isPending}
+            title="Delete Order"
+            message={`Are you sure you want to delete order #${deletingOrder?._id?.slice(-8).toUpperCase()}? This action cannot be undone.`}
+          />
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-border px-4 py-3">

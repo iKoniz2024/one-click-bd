@@ -20,6 +20,7 @@ import Input from "@/components/ui/Input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import CategorySelect from "@/components/ui/CategorySelect";
+import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import { useAuth } from "@/hooks/useAuth";
@@ -116,7 +117,7 @@ export default function AdminProducts({ children }) {
   const isVendor = user?.role === "vendor";
   const vendorUserId = user?._id || user?.id;
   const [showForm, setShowForm] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingProduct, setDeletingProduct] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [imageFiles, setImageFiles] = useState([]);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
@@ -273,7 +274,7 @@ export default function AdminProducts({ children }) {
     },
     onSuccess: () => {
       toast.success("Product deleted successfully");
-      setDeletingId(null);
+      setDeletingProduct(null);
     },
     onSettled: () => {
       queryClient.invalidateQueries();
@@ -549,6 +550,11 @@ export default function AdminProducts({ children }) {
                     <div>
                       <label className="mb-1.5 block text-xs font-semibold text-foreground">Discount (%)</label>
                       <Input {...register("discountPercentage")} type="number" step="0.1" min="0" max="100" placeholder="0" />
+                      {Number(watch("price") || 0) > 0 && Number(watch("discountPercentage") || 0) > 0 && (
+                        <p className="mt-1 text-xs font-semibold text-secondary">
+                          Selling Price: {formatBDT(Number(watch("price")) * (1 - Number(watch("discountPercentage")) / 100))}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -1107,7 +1113,20 @@ export default function AdminProducts({ children }) {
                     <td className="px-5 py-3">
                       <Badge variant="secondary" className="text-[11px]">{product.category}</Badge>
                     </td>
-                    <td className="px-5 py-3 font-medium text-foreground">{formatBDT(product.price)}</td>
+                    <td className="px-5 py-3">
+                      {product.discountPercentage > 0 ? (
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-foreground">
+                            {formatBDT(product.price * (1 - product.discountPercentage / 100))}
+                          </span>
+                          <span className="text-xs text-muted-foreground line-through">
+                            {formatBDT(product.price)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="font-medium text-foreground">{formatBDT(product.price)}</span>
+                      )}
+                    </td>
                     <td className="px-5 py-3">
                       <span className={`font-medium ${product.stock <= 10 ? "text-foreground" : "text-foreground"}`}>
                         {product.stock}
@@ -1122,41 +1141,20 @@ export default function AdminProducts({ children }) {
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button asChild variant="ghost" size="sm">
+                        <Button asChild variant="ghost" size="sm" title="View Product Details">
                           <Link href={`/dashboard/products/${product._id}`}>
                             <Eye className="size-4" />
                           </Link>
                         </Button>
-                        {deletingId === product._id ? (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              disabled={deleteMutation.isPending}
-                              onClick={() => deleteMutation.mutate(product._id)}
-                              className="h-7 text-xs px-2"
-                            >
-                              {deleteMutation.isPending ? "..." : "Delete"}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setDeletingId(null)}
-                              className="h-7 text-xs px-2"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:bg-destructive/10 hover:text-destructive font-medium"
-                            onClick={() => setDeletingId(product._id)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive font-medium"
+                          title="Delete Product"
+                          onClick={() => setDeletingProduct(product)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -1195,6 +1193,19 @@ export default function AdminProducts({ children }) {
           </div>
         )}
       </motion.div>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={!!deletingProduct}
+        onClose={() => setDeletingProduct(null)}
+        onConfirm={() => {
+          if (deletingProduct?._id) {
+            deleteMutation.mutate(deletingProduct._id);
+          }
+        }}
+        loading={deleteMutation.isPending}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${deletingProduct?.title}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import Input from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal";
 
 const bannerSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -30,7 +31,7 @@ export default function AdminBanners({ children }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingBanner, setDeletingBanner] = useState(null);
   const [createImage, setCreateImage] = useState("");
   const [createPreview, setCreatePreview] = useState("");
   const [editImage, setEditImage] = useState("");
@@ -125,7 +126,7 @@ export default function AdminBanners({ children }) {
     },
     onSuccess: () => {
       toast.success("Banner deleted");
-      setDeletingId(null);
+      setDeletingBanner(null);
     },
     onSettled: () => {
       queryClient.invalidateQueries();
@@ -319,7 +320,6 @@ export default function AdminBanners({ children }) {
         <div className="space-y-3">
           {banners.map((banner, i) => {
             const isEditing = editingId === banner._id;
-            const isDeleting = deletingId === banner._id;
 
             return (
               <motion.div
@@ -343,45 +343,25 @@ export default function AdminBanners({ children }) {
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-                      {!isDeleting && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={editingId !== null && !isEditing}
+                        onClick={() => isEditing ? (setEditingId(null), resetUpdate(), setEditImage(""), setEditPreview("")) : startEdit(banner)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      {!isEditing && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          disabled={editingId !== null && !isEditing}
-                          onClick={() => isEditing ? (setEditingId(null), resetUpdate(), setEditImage(""), setEditPreview("")) : startEdit(banner)}
+                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          disabled={editingId !== null}
+                          title="Delete Banner"
+                          onClick={() => setDeletingBanner(banner)}
                         >
-                          <Pencil className="size-4" />
+                          <Trash2 className="size-4" />
                         </Button>
-                      )}
-                      {!isEditing && (
-                        <>
-                          {!isDeleting ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-muted-foreground hover:bg-muted hover:text-foreground"
-                              disabled={editingId !== null}
-                              onClick={() => setDeletingId(banner._id)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-1.5">
-                              <span className="text-xs text-foreground">Delete?</span>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                disabled={deleteMutation.isPending}
-                                onClick={() => deleteMutation.mutate(banner._id)}
-                              >
-                                {deleteMutation.isPending ? "..." : "Yes"}
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => setDeletingId(null)}>
-                                No
-                              </Button>
-                            </div>
-                          )}
-                        </>
                       )}
                     </div>
                   </div>
@@ -467,6 +447,20 @@ export default function AdminBanners({ children }) {
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={!!deletingBanner}
+        onClose={() => setDeletingBanner(null)}
+        onConfirm={() => {
+          if (deletingBanner?._id) {
+            deleteMutation.mutate(deletingBanner._id);
+          }
+        }}
+        loading={deleteMutation.isPending}
+        title="Delete Banner"
+        message={`Are you sure you want to delete banner "${deletingBanner?.title}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

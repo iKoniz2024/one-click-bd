@@ -331,7 +331,17 @@ export default function OrderDetails({ children }) {
                             {item.title}
                           </Link>
                           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                            <span>{item.quantity} x {formatBDT(item.price)}</span>
+                            <span className="font-semibold text-foreground">{item.quantity} x {formatBDT(item.price)}</span>
+                            {((item.originalPrice && item.originalPrice > item.price) || (item.discountPercentage > 0)) && (
+                              <span className="line-through text-muted-foreground/70">
+                                {formatBDT(item.originalPrice || (item.price / (1 - item.discountPercentage / 100)))}
+                              </span>
+                            )}
+                            {item.discountPercentage > 0 && (
+                              <span className="rounded bg-secondary/15 px-1.5 py-0.5 text-[10px] font-bold text-secondary">
+                                -{Math.round(item.discountPercentage)}%
+                              </span>
+                            )}
                             {item.color && (
                               <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
                                 Color: {item.color}
@@ -344,9 +354,16 @@ export default function OrderDetails({ children }) {
                             )}
                           </div>
                         </div>
-                        <span className="shrink-0 text-sm font-bold text-foreground">
-                          {formatBDT(item.subtotal)}
-                        </span>
+                        <div className="shrink-0 text-right">
+                          <span className="text-sm font-bold text-foreground block">
+                            {formatBDT(item.subtotal)}
+                          </span>
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <span className="text-xs text-muted-foreground line-through block">
+                              {formatBDT(item.originalPrice * item.quantity)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

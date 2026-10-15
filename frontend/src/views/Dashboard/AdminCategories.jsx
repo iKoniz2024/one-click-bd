@@ -14,6 +14,7 @@ import Input from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import DeleteConfirmModal from "@/components/ui/DeleteConfirmModal";
 
 const attributeDefSchema = z.object({
   key: z.string().min(1, "Key is required"),
@@ -64,7 +65,7 @@ export default function AdminCategories({ children }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingCategory, setDeletingCategory] = useState(null);
   const [createImage, setCreateImage] = useState("");
   const [editImage, setEditImage] = useState("");
 
@@ -195,7 +196,7 @@ export default function AdminCategories({ children }) {
     },
     onSuccess: () => {
       toast.success("Category deleted");
-      setDeletingId(null);
+      setDeletingCategory(null);
     },
     onSettled: () => {
       queryClient.invalidateQueries();
@@ -605,7 +606,6 @@ export default function AdminCategories({ children }) {
         <div className="space-y-3">
           {categories.map((cat, i) => {
             const isEditing = editingId === cat._id;
-            const isDeleting = deletingId === cat._id;
 
             return (
               <motion.div
@@ -630,51 +630,27 @@ export default function AdminCategories({ children }) {
                         <p className="text-xs text-muted-foreground">/{cat.slug}</p>
                       </div>
                     </div>
-                    <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2 min-w-[140px]">
-                      {!isDeleting && (
+                    <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={editingId !== null && !isEditing}
+                        onClick={() => isEditing ? (setEditingId(null), resetUpdate()) : startEdit(cat)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+
+                      {!isEditing && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          disabled={editingId !== null && !isEditing}
-                          onClick={() => isEditing ? (setEditingId(null), resetUpdate()) : startEdit(cat)}
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          disabled={editingId !== null}
+                          title="Delete Category"
+                          onClick={() => setDeletingCategory(cat)}
                         >
-                          <Pencil className="size-4" />
+                          <Trash2 className="size-4" />
                         </Button>
-                      )}
-
-                      {!isEditing && (
-                        <>
-                          {!isDeleting ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                              disabled={editingId !== null}
-                              onClick={() => setDeletingId(cat._id)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-1.5">
-                              <span className="text-xs text-foreground">Delete?</span>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                disabled={deleteMutation.isPending}
-                                onClick={() => deleteMutation.mutate(cat._id)}
-                              >
-                                {deleteMutation.isPending ? "..." : "Yes"}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeletingId(null)}
-                              >
-                                No
-                              </Button>
-                            </div>
-                          )}
-                        </>
                       )}
                     </div>
                   </div>
@@ -968,6 +944,20 @@ export default function AdminCategories({ children }) {
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        open={!!deletingCategory}
+        onClose={() => setDeletingCategory(null)}
+        onConfirm={() => {
+          if (deletingCategory?._id) {
+            deleteMutation.mutate(deletingCategory._id);
+          }
+        }}
+        loading={deleteMutation.isPending}
+        title="Delete Category"
+        message={`Are you sure you want to delete category "${deletingCategory?.name}"? All subcategories and attributes will be affected.`}
+      />
     </div>
   );
 }

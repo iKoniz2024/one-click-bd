@@ -14,7 +14,7 @@ const createOrder = async (req, res) => {
         const productsCollection = db.collection("products");
         const ordersCollection = db.collection("orders");
 
-        const cart = await cartsCollection.aggregate([
+        const rawCart = await cartsCollection.aggregate([
             {
                 $match: {
                     userId: new ObjectId(req.user.id),
@@ -40,25 +40,44 @@ const createOrder = async (req, res) => {
                     title: "$product.title",
                     thumbnail: { $ifNull: ["$items.colorImage", "$product.thumbnail"] },
                     price: "$product.price",
+                    discountPercentage: { $ifNull: ["$product.discountPercentage", 0] },
                     quantity: "$items.quantity",
                     size: "$items.size",
                     color: "$items.color",
                     colorImage: "$items.colorImage",
-                    subtotal: {
-                        $multiply: [
-                            "$items.quantity",
-                            "$product.price",
-                        ],
-                    },
                 },
             },
         ]).toArray();
 
-        if (!cart.length) {
+        if (!rawCart.length) {
             return res.status(400).send({
                 message: "Cart is empty",
             });
         }
+
+        const cart = rawCart.map((item) => {
+            const originalPrice = Number(item.price || 0);
+            const discountPercentage = Number(item.discountPercentage || 0);
+            const price = discountPercentage > 0
+                ? Number((originalPrice * (1 - discountPercentage / 100)).toFixed(2))
+                : originalPrice;
+            const quantity = Number(item.quantity || 1);
+            const subtotal = Number((price * quantity).toFixed(2));
+
+            return {
+                productId: item.productId,
+                title: item.title,
+                thumbnail: item.thumbnail,
+                price,
+                originalPrice,
+                discountPercentage,
+                quantity,
+                size: item.size || "",
+                color: item.color || "",
+                colorImage: item.colorImage || "",
+                subtotal,
+            };
+        });
 
         // Atomic Stock Deduction Phase with Rollback Guarantee
         const deductedItems = [];
@@ -102,15 +121,13 @@ const createOrder = async (req, res) => {
         }
 
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-        const totalPrice = cart.reduce((sum, item) => sum + item.subtotal, 0);
+        const totalPrice = Number(cart.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
 
-        const FREE_SHIPPING_THRESHOLD = 1000;
-        const SHIPPING_INSIDE_DHAKA = 60;
-        const SHIPPING_OUTSIDE_DHAKA = 120;
+        const SHIPPING_INSIDE_DHAKA = 70;
+        const SHIPPING_OUTSIDE_DHAKA = 130;
 
-        const isFreeShipping = totalPrice >= FREE_SHIPPING_THRESHOLD;
-        const shippingCost = isFreeShipping ? 0 : (deliveryArea === "inside_dhaka" ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA);
-        const grandTotal = totalPrice + shippingCost;
+        const shippingCost = deliveryArea === "inside_dhaka" ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA;
+        const grandTotal = Number((totalPrice + shippingCost).toFixed(2));
 
         const tempOrderId = new ObjectId();
         const orderShortId = tempOrderId.toString().slice(-8).toUpperCase();
@@ -191,16 +208,26 @@ const createGuestOrder = async (req, res) => {
                 });
             }
 
+            const originalPrice = Number(product.price || 0);
+            const discountPercentage = Number(product.discountPercentage || 0);
+            const price = discountPercentage > 0
+                ? Number((originalPrice * (1 - discountPercentage / 100)).toFixed(2))
+                : originalPrice;
+            const quantity = Number(item.quantity || 1);
+            const subtotal = Number((price * quantity).toFixed(2));
+
             cart.push({
                 productId: product._id,
                 title: product.title,
                 thumbnail: item.colorImage || item.thumbnail || product.thumbnail,
-                price: product.price,
-                quantity: Number(item.quantity || 1),
+                price,
+                originalPrice,
+                discountPercentage,
+                quantity,
                 size: item.size || "",
                 color: item.color || "",
                 colorImage: item.colorImage || "",
-                subtotal: Number(item.quantity || 1) * product.price,
+                subtotal,
             });
         }
 
@@ -246,15 +273,13 @@ const createGuestOrder = async (req, res) => {
         }
 
         const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-        const totalPrice = cart.reduce((sum, item) => sum + item.subtotal, 0);
+        const totalPrice = Number(cart.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
 
-        const FREE_SHIPPING_THRESHOLD = 1000;
-        const SHIPPING_INSIDE_DHAKA = 60;
-        const SHIPPING_OUTSIDE_DHAKA = 120;
+        const SHIPPING_INSIDE_DHAKA = 70;
+        const SHIPPING_OUTSIDE_DHAKA = 130;
 
-        const isFreeShipping = totalPrice >= FREE_SHIPPING_THRESHOLD;
-        const shippingCost = isFreeShipping ? 0 : (deliveryArea === "inside_dhaka" ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA);
-        const grandTotal = totalPrice + shippingCost;
+        const shippingCost = deliveryArea === "inside_dhaka" ? SHIPPING_INSIDE_DHAKA : SHIPPING_OUTSIDE_DHAKA;
+        const grandTotal = Number((totalPrice + shippingCost).toFixed(2));
 
         const tempOrderId = new ObjectId();
         const orderShortId = tempOrderId.toString().slice(-8).toUpperCase();
@@ -294,6 +319,7 @@ const createGuestOrder = async (req, res) => {
 
         // Background tasks (Email & CAPI) after response sent
         setImmediate(() => {
+            sendPurchaseEvent(order, req);
             sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
         });
 
@@ -410,11 +436,17 @@ const getMyOrders = async (req, res) => {
                         input: { $ifNull: ["$items", []] },
                         as: "item",
                         in: {
+                            productId: "$$item.productId",
                             title: "$$item.title",
                             thumbnail: "$$item.thumbnail",
                             quantity: "$$item.quantity",
                             price: "$$item.price",
-                            subtotal: "$$item.subtotal"
+                            originalPrice: "$$item.originalPrice",
+                            discountPercentage: "$$item.discountPercentage",
+                            subtotal: "$$item.subtotal",
+                            size: "$$item.size",
+                            color: "$$item.color",
+                            colorImage: "$$item.colorImage"
                         }
                     }
                 }
@@ -455,10 +487,13 @@ const getAllOrders = async (req, res) => {
         const cacheKey = `orders_${page}_${limit}_${status}`;
         const result = await withCache(cacheKey, 15, async () => {
             const listProjection = {
+                orderShortId: 1,
                 orderStatus: 1,
                 paymentMethod: 1,
                 paymentStatus: 1,
                 totalPrice: 1,
+                subtotal: 1,
+                shippingCost: 1,
                 totalItems: 1,
                 deliveryArea: 1,
                 shippingAddress: {
@@ -473,11 +508,17 @@ const getAllOrders = async (req, res) => {
                         input: { $ifNull: ["$items", []] },
                         as: "item",
                         in: {
+                            productId: "$$item.productId",
                             title: "$$item.title",
                             thumbnail: "$$item.thumbnail",
                             quantity: "$$item.quantity",
                             price: "$$item.price",
-                            subtotal: "$$item.subtotal"
+                            originalPrice: "$$item.originalPrice",
+                            discountPercentage: "$$item.discountPercentage",
+                            subtotal: "$$item.subtotal",
+                            size: "$$item.size",
+                            color: "$$item.color",
+                            colorImage: "$$item.colorImage"
                         }
                     }
                 }
@@ -775,7 +816,7 @@ const sendInvoiceEmail = async (order, targetEmail = null) => {
                     <span style="font-weight:600;">${item.title}</span>${item.color ? `<br><span style="font-size:11px;color:#888;">Color: ${item.color}</span>` : ""}${item.size ? `<br><span style="font-size:11px;color:#888;">Size: ${item.size}</span>` : ""}
                 </td>
                 <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:center;font-size:13px;color:#555;">${item.quantity}</td>
-                <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#555;">৳${Number(item.price).toFixed(2)}</td>
+                <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#555;">৳${Number(item.price).toFixed(2)}${item.originalPrice && item.originalPrice > item.price ? ` <span style="text-decoration:line-through;color:#aaa;font-size:11px;margin-left:4px;">৳${Number(item.originalPrice).toFixed(2)}</span>` : ""}</td>
                 <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;font-weight:600;color:#1a1a1a;">৳${Number(item.subtotal || item.price * item.quantity).toFixed(2)}</td>
             </tr>`
         )
